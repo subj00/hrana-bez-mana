@@ -8,6 +8,7 @@
   --color-text: #2f2f2f;
   --color-text-muted: #4d4d4d;
   --color-blush: #f9d6df;
+  --color-blush-soft: #fdecf0;
   --color-mint: #b8ebe5;
   --color-mint-strong: #9fe0d8;
   --color-accent: var(--color-mint);
@@ -42,12 +43,12 @@
   /* Header height at the top of the page, and once the page has been scrolled. */
   --header-height: 6.5rem;
   --header-height-compact: 4.75rem;
-  --radius: 0.125rem;
+  --radius: 0.5rem;
 }
 
 @media (max-width: 48rem) {
   :root {
-    --header-height: 5rem;
+    --header-height: 4.5rem;
     --header-height-compact: 4.25rem;
   }
 }

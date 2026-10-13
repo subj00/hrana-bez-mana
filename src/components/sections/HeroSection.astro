@@ -7,15 +7,24 @@ import { SECTION_IDS } from '@/data/navigation';
 import { site } from '@/data/site';
 
 const headingId = `${SECTION_IDS.home}-naslov`;
+const eyebrow = ['Torte', 'Kolači', 'Ketering'].join(' · ');
 ---
 
 <section class="hero" id={SECTION_IDS.home} aria-labelledby={headingId}>
   <!-- Organic pink shape (desktop/tablet); stretches with the right half of the hero. -->
   <svg class="hero__shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-    <path d="M7 0 C-2 18 3 40 22 58 C38 73 50 88 68 100 L100 100 L100 0 Z"></path>
+    <defs>
+      <!-- Lighter towards the white side so the edge reads softer. -->
+      <linearGradient id="hero-shape-fill" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" style="stop-color: var(--color-blush-soft)"></stop>
+        <stop offset="0.55" style="stop-color: var(--color-blush)"></stop>
+      </linearGradient>
+    </defs>
+    <path d="M15 0 C4 14 5 35 21 54 C35 71 51 86 71 100 L100 100 L100 0 Z" fill="url(#hero-shape-fill)"></path>
   </svg>
 
   <div class="hero__content">
+    <p class="hero__eyebrow">{eyebrow}</p>
     <h1 class="hero__title" id={headingId}>
       <span>Hrana bez</span>
       <span>Mana</span>
@@ -23,22 +32,33 @@ const headingId = `${SECTION_IDS.home}-naslov`;
     <p class="hero__text">{site.description}</p>
   </div>
 
-  <div class="hero__media">
-    <Image
-      class="hero__image"
-      src={cakeImage}
-      alt="Plava torta sa kremom, čokoladnim ukrasima i prelivom"
-      widths={[360, 560, 800, 1100]}
-      sizes="(max-width: 48rem) 70vw, 36vw"
-      loading="eager"
-      fetchpriority="high"
-    />
+  <div class="hero__media" style={`--cake-ratio: ${cakeImage.width / cakeImage.height}`}>
+    <!-- Pink shape for the stacked layout: a full-bleed hill the cake rises out of. -->
+    <svg class="hero__hill" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="hero-hill-fill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" style="stop-color: var(--color-blush-soft)"></stop>
+          <stop offset="0.55" style="stop-color: var(--color-blush)"></stop>
+        </linearGradient>
+      </defs>
+      <path d="M0 36 C16 10 50 0 100 18 L100 100 L0 100 Z" fill="url(#hero-hill-fill)"></path>
+    </svg>
+    <div class="hero__figure">
+      <Image
+        class="hero__image"
+        src={cakeImage}
+        alt="Plava torta sa kremom, čokoladnim ukrasima i prelivom"
+        widths={[360, 560, 800, 1100]}
+        sizes="(max-width: 48rem) 85vw, 36vw"
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
   </div>
 
-  <!-- After the cake in the source so the row stacks above it and stays clickable. -->
   <div class="hero__actions">
     <div class="hero__cta">
-      <Button href={`#${SECTION_IDS.products}`}>Pogledajte ponudu</Button>
+      <Button href={`#${SECTION_IDS.products}`} arrow>Pogledajte ponudu</Button>
     </div>
     <a
       class="hero__social"
@@ -47,7 +67,7 @@ const headingId = `${SECTION_IDS.home}-naslov`;
       rel="noopener noreferrer"
       aria-label={`Instagram - ${site.name}`}
     >
-      <Image src={instagramLogo} alt="" width={24} height={24} densities={[1, 2]} />
+      <Image src={instagramLogo} alt="" width={22} height={22} densities={[1, 2]} />
     </a>
   </div>
 </section>
@@ -72,20 +92,50 @@ const headingId = `${SECTION_IDS.home}-naslov`;
     isolation: isolate;
   }
 
-  .hero__shape {
+  .hero__shape,
+  .hero__hill {
     position: absolute;
-    inset: 0 0 0 auto;
     z-index: -1;
+    animation: fade-in 900ms ease-out backwards;
+  }
+
+  .hero__shape {
+    inset: 0 0 0 auto;
     width: 52%;
     height: 100%;
-    fill: var(--color-blush);
-    animation: fade-in 900ms ease-out backwards;
+  }
+
+  .hero__hill {
+    display: none;
   }
 
   .hero__content {
     grid-area: 2 / 1;
     /* The gap above the button lives here so the button row is exactly as tall as the button. */
-    padding: var(--space-lg) var(--space-lg) clamp(2rem, 8svh, 5rem) var(--hero-inset);
+    padding: var(--space-lg) var(--space-lg) clamp(2rem, 7svh, 4.5rem) var(--hero-inset);
+  }
+
+  /* Small category line with a mint rule in front of it. */
+  .hero__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: clamp(1rem, 3svh, 1.75rem);
+    font-family: var(--font-nav);
+    font-size: clamp(0.6875rem, 0.85vw, 0.8125rem);
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    animation: fade-up 800ms var(--ease-out) 60ms backwards;
+  }
+
+  .hero__eyebrow::before {
+    content: '';
+    flex: none;
+    width: clamp(1.75rem, 3vw, 3rem);
+    height: 2px;
+    background: var(--color-mint-strong);
   }
 
   .hero__title {
@@ -95,23 +145,30 @@ const headingId = `${SECTION_IDS.home}-naslov`;
     line-height: 1;
     letter-spacing: -0.02em;
     text-transform: uppercase;
-    animation: fade-up 800ms var(--ease-out) 100ms backwards;
   }
 
+  /* The two lines come in one after the other. */
   .hero__title span {
     display: block;
+    animation: fade-up 800ms var(--ease-out) 140ms backwards;
+  }
+
+  .hero__title span + span {
+    animation-delay: 230ms;
   }
 
   .hero__text {
     max-width: 27rem;
-    margin-top: clamp(1.5rem, 4.5svh, 3rem);
+    margin-top: clamp(1.25rem, 4svh, 2.5rem);
     font-size: clamp(1rem, 1.25vw, 1.125rem);
     line-height: 1.75;
     color: var(--color-text-muted);
-    animation: fade-up 800ms var(--ease-out) 240ms backwards;
+    animation: fade-up 800ms var(--ease-out) 340ms backwards;
   }
 
+  /* Raised above the cake, which overlaps this row's right end on desktop. */
   .hero__actions {
+    z-index: 1;
     grid-area: 3 / 1 / 4 / -1;
     display: flex;
     align-items: center;
@@ -121,30 +178,44 @@ const headingId = `${SECTION_IDS.home}-naslov`;
   }
 
   .hero__cta {
-    animation: fade-up 800ms var(--ease-out) 380ms backwards;
+    animation: fade-up 800ms var(--ease-out) 460ms backwards;
   }
 
   .hero__media {
+    position: relative;
     grid-area: 1 / 2 / -1 / 3;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: var(--space-lg) var(--page-gutter) var(--space-lg) var(--space-lg);
+    /* Extra room on the right keeps the cake clear of the Instagram icon's column. */
+    padding: var(--space-lg) calc(var(--page-gutter) + 2.75rem) var(--space-lg) var(--space-lg);
   }
 
-  .hero :global(.hero__image) {
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: min(70svh, 46rem);
+  /*
+   * The cake is sized by the height available to it: the width is that height times the
+   * image's aspect ratio, capped by the column. Setting the width explicitly (instead of
+   * width: auto + max-height) keeps the size independent of the `sizes` attribute.
+   */
+  .hero__figure {
+    --cake-height: min(72svh, 48rem);
+
+    width: min(100%, var(--cake-height) * var(--cake-ratio));
     /* The image has empty space above the cake; nudge it up to sit optically centered. */
-    translate: 0 -5%;
-    filter: drop-shadow(0 1.75rem 1.75rem rgb(60 30 40 / 0.22));
+    translate: 0 -4%;
     animation: rise-in 1000ms var(--ease-out) 250ms backwards;
   }
 
-  /* 44px tap target around the 24px icon; the negative margin keeps the icon itself
-     on the page gutter. */
+  .hero :global(.hero__image) {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 1.75rem 1.75rem rgb(60 30 40 / 0.22));
+  }
+
+  /*
+   * Instagram: right end of the button row, so it is always level with the button and
+   * lines up with the navigation's right edge above. 44px tap target around the 22px
+   * icon; the negative margin keeps the icon itself on the page gutter.
+   */
   .hero__social {
     display: inline-flex;
     flex: none;
@@ -152,8 +223,8 @@ const headingId = `${SECTION_IDS.home}-naslov`;
     justify-content: center;
     width: 2.75rem;
     height: 2.75rem;
-    margin-inline-end: -0.625rem;
-    animation: fade-in 600ms ease-out 800ms backwards;
+    margin-inline-end: -0.6875rem;
+    animation: fade-in 600ms ease-out 850ms backwards;
     transition:
       transform var(--duration) var(--ease-out),
       opacity var(--duration) ease;
@@ -171,25 +242,39 @@ const headingId = `${SECTION_IDS.home}-naslov`;
   }
 
   /*
-   * Mobile and small tablet: text, the button/Instagram row, then the cake on its own
-   * pink shape. The hero is only as tall as its content here (no forced viewport
-   * height), and the cake is sized from the height left under the text so that on
-   * common phones everything fits the first screen; shorter screens simply scroll.
+   * Mobile and small tablet: text, the button/Instagram row, then the cake.
+   *
+   * The hero is at least one screen tall, and the cake row is the only flexible row. So
+   * when the content is shorter than the screen the spare height goes to the cake's pink
+   * area, which runs to the bottom edge of the hero — never to a blank gap between the
+   * text and the cake, and never to a white strip under it. When the content is taller
+   * than the screen the hero simply grows and scrolls.
    */
   @media (max-width: 48rem) {
     .hero {
       grid-template-columns: 1fr;
-      grid-template-rows: auto;
-      min-height: 0;
+      grid-template-rows: auto auto 1fr;
     }
 
     .hero__shape {
       display: none;
     }
 
+    .hero__hill {
+      inset: 24% 0 0;
+      display: block;
+      width: 100%;
+      height: 76%;
+    }
+
     .hero__content {
       grid-area: 1 / 1;
       padding: var(--space-sm) var(--page-gutter) clamp(1.25rem, 3.5svh, 2rem);
+    }
+
+    .hero__eyebrow {
+      margin-bottom: clamp(0.625rem, 1.75svh, 1rem);
+      letter-spacing: 0.18em;
     }
 
     .hero__title {
@@ -206,25 +291,15 @@ const headingId = `${SECTION_IDS.home}-naslov`;
     }
 
     .hero__media {
-      position: relative;
       grid-area: 3 / 1;
-      padding: var(--space-sm) var(--page-gutter) var(--space-lg);
+      padding: var(--space-md) var(--page-gutter) var(--space-lg);
     }
 
-    .hero__media::before {
-      content: '';
-      position: absolute;
-      inset: 22% -12% 0 -4%;
-      z-index: -1;
-      border-radius: 62% 38% 0 0 / 42% 26% 0 0;
-      background: var(--color-blush);
-      animation: fade-in 900ms ease-out backwards;
-    }
+    /* 29.5rem ≈ everything in the hero except the cake: header, text, button row, paddings. */
+    .hero__figure {
+      --cake-height: clamp(17rem, 100svh - 29.5rem, 34rem);
 
-    /* 27rem ≈ header + text + button row + paddings above and below the cake. */
-    .hero :global(.hero__image) {
-      max-width: min(82%, 26rem);
-      max-height: clamp(15rem, 100svh - 27rem, 34rem);
+      width: min(88%, 26rem, var(--cake-height) * var(--cake-ratio));
       translate: none;
     }
   }
