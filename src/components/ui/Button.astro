@@ -1,0 +1,75 @@
+---
+import type { HTMLAttributes } from 'astro/types';
+
+type Variant = 'primary' | 'secondary';
+
+/** Renders a link when `href` is set, otherwise a button. */
+type Props = { variant?: Variant } & (
+  | ({ href: string } & HTMLAttributes<'a'>)
+  | ({ href?: undefined } & HTMLAttributes<'button'>)
+);
+
+const { variant = 'primary', class: className, ...rest } = Astro.props;
+const classes = ['button', `button--${variant}`, className];
+---
+
+{
+  rest.href !== undefined ? (
+    <a class:list={classes} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type="button" class:list={classes} {...rest}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  .button {
+    display: inline-block;
+    padding: 1.05rem 2.25rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    color: var(--color-text);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color var(--duration) ease,
+      border-color var(--duration) ease,
+      box-shadow var(--duration) ease,
+      transform var(--duration) var(--ease-out);
+  }
+
+  .button:hover {
+    box-shadow: 0 0.75rem 1.5rem -0.75rem rgb(47 47 47 / 0.35);
+    transform: translateY(-2px);
+  }
+
+  .button:active {
+    box-shadow: none;
+    transform: none;
+  }
+
+  .button--primary {
+    background: var(--color-mint);
+  }
+
+  .button--primary:hover {
+    background: var(--color-mint-strong);
+  }
+
+  .button--secondary {
+    border-color: var(--color-text);
+    background: transparent;
+  }
+
+  .button--secondary:hover {
+    background: var(--color-surface);
+  }
+</style>

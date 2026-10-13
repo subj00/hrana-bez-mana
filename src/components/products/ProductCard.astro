@@ -1,0 +1,26 @@
+---
+import { Image } from 'astro:assets';
+import { formatPrice } from '@/lib/format';
+import type { Product } from '@/types/catalog';
+
+interface Props {
+  product: Product;
+}
+
+const { product } = Astro.props;
+const [image] = product.images;
+---
+
+<article>
+  {
+    image &&
+      (typeof image.src === 'string' ? (
+        <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+      ) : (
+        <Image src={image.src} alt={image.alt} />
+      ))
+  }
+  <h4>{product.name}</h4>
+  <p>{product.description}</p>
+  {product.price !== undefined && <p>{formatPrice(product.price)}</p>}
+</article>

@@ -1,0 +1,77 @@
+---
+import Navigation from '@/components/layout/Navigation.astro';
+import { SECTION_IDS } from '@/data/navigation';
+import { site } from '@/data/site';
+
+const brandLines = site.name.split(' ');
+---
+
+<header class="header" data-header>
+  <a class="brand" href={`#${SECTION_IDS.home}`} aria-label={site.name}>
+    {brandLines.map((line) => <span>{line}</span>)}
+  </a>
+  <Navigation />
+</header>
+
+<script>
+  // Flags the header once the page is scrolled so it can switch to its solid, compact look.
+  const header = document.querySelector<HTMLElement>('[data-header]');
+
+  if (header) {
+    const update = () => header.toggleAttribute('data-scrolled', window.scrollY > 8);
+
+    update();
+    window.addEventListener('scroll', update, { passive: true });
+  }
+</script>
+
+<style>
+  /* Fixed over the page: transparent on top of the hero, translucent once scrolled. */
+  .header {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    height: var(--header-height);
+    padding-inline: var(--page-gutter);
+    animation: fade-down 600ms var(--ease-out) backwards;
+    transition:
+      height var(--duration) var(--ease-out),
+      background-color var(--duration) ease,
+      box-shadow var(--duration) ease;
+  }
+
+  .header[data-scrolled] {
+    height: var(--header-height-compact);
+    background: rgb(255 255 255 / 0.85);
+    box-shadow: 0 1px 0 rgb(0 0 0 / 0.06);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+  }
+
+  /* Solid behind the open mobile menu, wherever the page is scrolled to. */
+  :global(html[data-menu-open]) .header {
+    background: var(--color-bg);
+  }
+
+  .brand {
+    display: inline-flex;
+    flex-direction: column;
+    padding: 0.3rem 0.5rem 0.35rem;
+    border: 2px solid var(--color-mint-strong);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    text-transform: lowercase;
+    transition: background-color var(--duration) ease;
+  }
+
+  .brand:hover {
+    background: var(--color-mint);
+  }
+</style>

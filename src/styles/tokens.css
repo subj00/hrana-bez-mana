@@ -1,0 +1,53 @@
+/*
+ * Design tokens. Components should reference these instead of hard-coded values.
+ */
+:root {
+  /* Colors */
+  --color-bg: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-text: #2f2f2f;
+  --color-text-muted: #4d4d4d;
+  --color-blush: #f9d6df;
+  --color-mint: #b8ebe5;
+  --color-mint-strong: #9fe0d8;
+  --color-accent: var(--color-mint);
+  --color-border: #dddddd;
+
+  /* Typography — the font variables are provided by the <Font> components in BaseLayout. */
+  --font-body: var(--font-jost), system-ui, sans-serif;
+  --font-heading: var(--font-body);
+  --font-display: var(--font-outfit), system-ui, sans-serif;
+  --font-nav: var(--font-montserrat), system-ui, sans-serif;
+  --font-size-base: 1rem;
+  --line-height-base: 1.6;
+  --line-height-heading: 1.2;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast: 200ms;
+  --duration: 300ms;
+  --duration-slow: 700ms;
+
+  /* Spacing */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 2rem;
+  --space-xl: 4rem;
+
+  /* Layout */
+  --container-max: 72rem;
+  --container-padding: var(--space-md);
+  --page-gutter: clamp(1.25rem, 5vw, 4.5rem);
+  /* Header height at the top of the page, and once the page has been scrolled. */
+  --header-height: 6.5rem;
+  --header-height-compact: 4.75rem;
+  --radius: 0.125rem;
+}
+
+@media (max-width: 48rem) {
+  :root {
+    --header-height: 5rem;
+    --header-height-compact: 4.25rem;
+  }
+}

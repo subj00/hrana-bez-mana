@@ -1,0 +1,62 @@
+---
+import Section from '@/components/ui/Section.astro';
+import { SECTION_IDS } from '@/data/navigation';
+import { site } from '@/data/site';
+
+const { phone, email, address, social } = site.contact;
+---
+
+<Section id={SECTION_IDS.contact} title="Kontakt">
+  <address data-reveal>
+    <dl>
+      {
+        phone && (
+          <div>
+            <dt>Telefon</dt>
+            <dd>
+              <a href={`tel:${phone.replace(/[^\d+]/g, '')}`}>{phone}</a>
+            </dd>
+          </div>
+        )
+      }
+      {
+        email && (
+          <div>
+            <dt>Email</dt>
+            <dd>
+              <a href={`mailto:${email}`}>{email}</a>
+            </dd>
+          </div>
+        )
+      }
+      {
+        address && (
+          <div>
+            <dt>Adresa</dt>
+            <dd>{address}</dd>
+          </div>
+        )
+      }
+    </dl>
+  </address>
+  {
+    social.length > 0 && (
+      <ul role="list">
+        {social.map((link) => (
+          <li>
+            <a href={link.href} rel="noopener noreferrer">
+              {link.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+  <!-- Future contact form goes here. -->
+</Section>
+
+<style>
+  address {
+    font-style: normal;
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+import { Font } from 'astro:assets';
+import Footer from '@/components/layout/Footer.astro';
+import Header from '@/components/layout/Header.astro';
+import { site } from '@/data/site';
+import '@/styles/global.css';
+
+interface Props {
+  /** Page-specific title; the site name is appended automatically. */
+  title?: string;
+  description?: string;
+  /** Path or URL of the social sharing image. */
+  image?: string;
+}
+
+const { title, description = site.description, image } = Astro.props;
+
+const pageTitle = title ? `${title} | ${site.name}` : site.name;
+// Absolute URLs need `site` in astro.config.mjs; omitted until it is set.
+const canonicalUrl = Astro.site ? new URL(Astro.url.pathname, Astro.site) : undefined;
+const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
+---
+
+<!doctype html>
+<html lang={site.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <Font cssVariable="--font-jost" preload />
+    <Font cssVariable="--font-montserrat" preload />
+    <Font cssVariable="--font-outfit" preload />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content={site.ogLocale} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+    {imageUrl && <meta property="og:image" content={imageUrl} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#sadrzaj">Preskoči na sadržaj</a>
+    <Header />
+    <main id="sadrzaj">
+      <slot />
+    </main>
+    <Footer />
+
+    <!-- Scroll reveal: fades [data-reveal] elements in once, the first time they enter the
+         viewport. Inline so the hidden state is applied before first paint; styles are in
+         animations.css. -->
+    <script is:inline>
+      (() => {
+        const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduced || !('IntersectionObserver' in window)) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.setAttribute('data-revealed', '');
+              observer.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px' },
+        );
+
+        document.documentElement.setAttribute('data-reveal-ready', '');
+        for (const element of document.querySelectorAll('[data-reveal]')) observer.observe(element);
+      })();
+    </script>
+  </body>
+</html>

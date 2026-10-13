@@ -1,0 +1,231 @@
+---
+import { Image } from 'astro:assets';
+import cakeImage from '@/assets/homepage-cake.png';
+import instagramLogo from '@/assets/instagram-logo.png';
+import Button from '@/components/ui/Button.astro';
+import { SECTION_IDS } from '@/data/navigation';
+import { site } from '@/data/site';
+
+const headingId = `${SECTION_IDS.home}-naslov`;
+---
+
+<section class="hero" id={SECTION_IDS.home} aria-labelledby={headingId}>
+  <!-- Organic pink shape (desktop/tablet); stretches with the right half of the hero. -->
+  <svg class="hero__shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M7 0 C-2 18 3 40 22 58 C38 73 50 88 68 100 L100 100 L100 0 Z"></path>
+  </svg>
+
+  <div class="hero__content">
+    <h1 class="hero__title" id={headingId}>
+      <span>Hrana bez</span>
+      <span>Mana</span>
+    </h1>
+    <p class="hero__text">{site.description}</p>
+  </div>
+
+  <div class="hero__media">
+    <Image
+      class="hero__image"
+      src={cakeImage}
+      alt="Plava torta sa kremom, čokoladnim ukrasima i prelivom"
+      widths={[360, 560, 800, 1100]}
+      sizes="(max-width: 48rem) 70vw, 36vw"
+      loading="eager"
+      fetchpriority="high"
+    />
+  </div>
+
+  <!-- After the cake in the source so the row stacks above it and stays clickable. -->
+  <div class="hero__actions">
+    <div class="hero__cta">
+      <Button href={`#${SECTION_IDS.products}`}>Pogledajte ponudu</Button>
+    </div>
+    <a
+      class="hero__social"
+      href={site.instagramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`Instagram - ${site.name}`}
+    >
+      <Image src={instagramLogo} alt="" width={24} height={24} densities={[1, 2]} />
+    </a>
+  </div>
+</section>
+
+<style>
+  /*
+   * Grid: the text sits in the left column and the cake spans all rows on the right.
+   * Below the text, a full-width flex row holds the button (left) and the Instagram
+   * icon (right), so the two always share one horizontal line. The flexible outer
+   * rows center the text-and-button block vertically.
+   */
+  .hero {
+    --hero-inset: clamp(2rem, 8.5vw, 9rem);
+
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr auto auto 1fr;
+    min-height: 100svh;
+    padding-top: var(--header-height);
+    overflow: clip;
+    isolation: isolate;
+  }
+
+  .hero__shape {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: -1;
+    width: 52%;
+    height: 100%;
+    fill: var(--color-blush);
+    animation: fade-in 900ms ease-out backwards;
+  }
+
+  .hero__content {
+    grid-area: 2 / 1;
+    /* The gap above the button lives here so the button row is exactly as tall as the button. */
+    padding: var(--space-lg) var(--space-lg) clamp(2rem, 8svh, 5rem) var(--hero-inset);
+  }
+
+  .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.75rem, 6.6vw, 7rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    animation: fade-up 800ms var(--ease-out) 100ms backwards;
+  }
+
+  .hero__title span {
+    display: block;
+  }
+
+  .hero__text {
+    max-width: 27rem;
+    margin-top: clamp(1.5rem, 4.5svh, 3rem);
+    font-size: clamp(1rem, 1.25vw, 1.125rem);
+    line-height: 1.75;
+    color: var(--color-text-muted);
+    animation: fade-up 800ms var(--ease-out) 240ms backwards;
+  }
+
+  .hero__actions {
+    grid-area: 3 / 1 / 4 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding-inline: var(--hero-inset) var(--page-gutter);
+  }
+
+  .hero__cta {
+    animation: fade-up 800ms var(--ease-out) 380ms backwards;
+  }
+
+  .hero__media {
+    grid-area: 1 / 2 / -1 / 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg) var(--page-gutter) var(--space-lg) var(--space-lg);
+  }
+
+  .hero :global(.hero__image) {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: min(70svh, 46rem);
+    /* The image has empty space above the cake; nudge it up to sit optically centered. */
+    translate: 0 -5%;
+    filter: drop-shadow(0 1.75rem 1.75rem rgb(60 30 40 / 0.22));
+    animation: rise-in 1000ms var(--ease-out) 250ms backwards;
+  }
+
+  /* 44px tap target around the 24px icon; the negative margin keeps the icon itself
+     on the page gutter. */
+  .hero__social {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-inline-end: -0.625rem;
+    animation: fade-in 600ms ease-out 800ms backwards;
+    transition:
+      transform var(--duration) var(--ease-out),
+      opacity var(--duration) ease;
+  }
+
+  .hero__social:hover {
+    opacity: 0.75;
+    transform: translateY(-2px) scale(1.12);
+  }
+
+  @media (max-width: 64rem) {
+    .hero {
+      --hero-inset: var(--page-gutter);
+    }
+  }
+
+  /*
+   * Mobile and small tablet: text, the button/Instagram row, then the cake on its own
+   * pink shape. The hero is only as tall as its content here (no forced viewport
+   * height), and the cake is sized from the height left under the text so that on
+   * common phones everything fits the first screen; shorter screens simply scroll.
+   */
+  @media (max-width: 48rem) {
+    .hero {
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+      min-height: 0;
+    }
+
+    .hero__shape {
+      display: none;
+    }
+
+    .hero__content {
+      grid-area: 1 / 1;
+      padding: var(--space-sm) var(--page-gutter) clamp(1.25rem, 3.5svh, 2rem);
+    }
+
+    .hero__title {
+      font-size: clamp(2.5rem, 13vw, 4.5rem);
+    }
+
+    .hero__text {
+      margin-top: clamp(0.75rem, 2svh, 1.25rem);
+    }
+
+    .hero__actions {
+      grid-area: 2 / 1;
+      padding-inline: var(--page-gutter);
+    }
+
+    .hero__media {
+      position: relative;
+      grid-area: 3 / 1;
+      padding: var(--space-sm) var(--page-gutter) var(--space-lg);
+    }
+
+    .hero__media::before {
+      content: '';
+      position: absolute;
+      inset: 22% -12% 0 -4%;
+      z-index: -1;
+      border-radius: 62% 38% 0 0 / 42% 26% 0 0;
+      background: var(--color-blush);
+      animation: fade-in 900ms ease-out backwards;
+    }
+
+    /* 27rem ≈ header + text + button row + paddings above and below the cake. */
+    .hero :global(.hero__image) {
+      max-width: min(82%, 26rem);
+      max-height: clamp(15rem, 100svh - 27rem, 34rem);
+      translate: none;
+    }
+  }
+</style>

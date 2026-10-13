@@ -1,0 +1,12 @@
+---
+import Container from '@/components/ui/Container.astro';
+import { site } from '@/data/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer>
+  <Container>
+    <p>&copy; {year} {site.name}</p>
+  </Container>
+</footer>
