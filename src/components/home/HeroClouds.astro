@@ -14,7 +14,10 @@ interface Cloud {
   opacity: number;
   blur?: number;
   flip?: boolean;
-  /** Slow drift: distance in % of the hero's width/height, and the time for one way. */
+  /**
+   * Back-and-forth drift: pixels travelled each way (negative x = drifts left first) and
+   * the seconds that one way takes. Bigger clouds move further but more slowly.
+   */
   drift: { x: number; y: number; seconds: number };
   mobile?: { x: number; y: number; width: number } | false;
 }
@@ -24,15 +27,15 @@ interface Cloud {
  * air around them; several clouds run off the edges of the screen.
  */
 const clouds: Cloud[] = [
-  { x: -3, y: 13, width: 24, opacity: 0.6, blur: 3, drift: { x: 2.5, y: 0.8, seconds: 70 }, mobile: { x: -8, y: 5, width: 46 } },
-  { x: 31, y: 5, width: 8, opacity: 0.5, blur: 2, flip: true, drift: { x: -1.5, y: 0.5, seconds: 58 }, mobile: false },
-  { x: 49, y: 13, width: 11, opacity: 0.75, blur: 1, drift: { x: 1.8, y: -0.6, seconds: 64 }, mobile: false },
-  { x: 99, y: 17, width: 27, opacity: 0.9, flip: true, drift: { x: -2.5, y: 0.6, seconds: 82 }, mobile: { x: 104, y: 13, width: 50 } },
-  { x: 5, y: 63, width: 21, opacity: 0.92, drift: { x: 2, y: -0.8, seconds: 76 }, mobile: { x: -12, y: 33, width: 44 } },
-  { x: 46, y: 76, width: 13, opacity: 0.45, blur: 4, flip: true, drift: { x: -1.6, y: 0.5, seconds: 90 }, mobile: false },
-  { x: 95, y: 64, width: 17, opacity: 0.75, blur: 1, drift: { x: -2, y: -0.7, seconds: 68 }, mobile: { x: 108, y: 42, width: 40 } },
-  { x: 76, y: 97, width: 26, opacity: 0.55, blur: 3, flip: true, drift: { x: 2.2, y: -0.5, seconds: 86 }, mobile: { x: 104, y: 74, width: 44 } },
-  { x: 20, y: 99, width: 19, opacity: 0.5, blur: 3, drift: { x: -1.8, y: 0.4, seconds: 72 }, mobile: { x: -6, y: 92, width: 40 } },
+  { x: -3, y: 13, width: 24, opacity: 0.6, blur: 3, drift: { x: 40, y: 8, seconds: 16 }, mobile: { x: -8, y: 5, width: 46 } },
+  { x: 31, y: 5, width: 8, opacity: 0.5, blur: 2, flip: true, drift: { x: -22, y: 6, seconds: 9 }, mobile: false },
+  { x: 49, y: 13, width: 11, opacity: 0.75, blur: 1, drift: { x: 28, y: -8, seconds: 11 }, mobile: false },
+  { x: 99, y: 17, width: 27, opacity: 0.9, flip: true, drift: { x: -44, y: 10, seconds: 18 }, mobile: { x: 104, y: 13, width: 50 } },
+  { x: 5, y: 63, width: 21, opacity: 0.92, drift: { x: 34, y: -9, seconds: 14 }, mobile: { x: -12, y: 33, width: 44 } },
+  { x: 46, y: 76, width: 13, opacity: 0.45, blur: 4, flip: true, drift: { x: -26, y: 7, seconds: 12 }, mobile: false },
+  { x: 95, y: 64, width: 17, opacity: 0.75, blur: 1, drift: { x: -32, y: -8, seconds: 13 }, mobile: { x: 108, y: 42, width: 40 } },
+  { x: 76, y: 97, width: 26, opacity: 0.55, blur: 3, flip: true, drift: { x: 42, y: -6, seconds: 17 }, mobile: { x: 104, y: 74, width: 44 } },
+  { x: 20, y: 99, width: 19, opacity: 0.5, blur: 3, drift: { x: -30, y: 6, seconds: 15 }, mobile: { x: -6, y: 92, width: 40 } },
 ];
 
 const cloud = getAsset('decoration-cloud.png');
@@ -42,12 +45,8 @@ const cloud = getAsset('decoration-cloud.png');
   cloud && (
     <div class="clouds" aria-hidden="true">
       {clouds.map((c, index) => (
-        <Image
+        <span
           class:list={['cloud', { 'cloud--desktop': c.mobile === false }]}
-          src={cloud}
-          alt=""
-          width={cloud.width}
-          loading="eager"
           style={[
             `--x: ${c.x}%`,
             `--y: ${c.y}%`,
@@ -56,62 +55,73 @@ const cloud = getAsset('decoration-cloud.png');
             `--o: ${c.opacity}`,
             `--blur: ${c.blur ?? 0}px`,
             `--flip: ${c.flip ? -1 : 1}`,
-            `--dx: ${c.drift.x}cqw`,
-            `--dy: ${c.drift.y}cqh`,
+            `--dx: ${c.drift.x}px`,
+            `--dy: ${c.drift.y}px`,
             `--dur: ${c.drift.seconds}s`,
             // Negative delays start each cloud part-way through its drift, so they never move in step.
-            `--delay: -${(index * 13) % c.drift.seconds}s`,
+            `--delay: -${((index * 3.7) % c.drift.seconds).toFixed(1)}s`,
           ]
             .filter(Boolean)
             .join('; ')}
-        />
+        >
+          <Image class="cloud__image" src={cloud} alt="" width={cloud.width} loading="eager" />
+        </span>
       ))}
     </div>
   )
 }
 
 <style>
-  /* Fills the hero behind everything; a size container so clouds scale with the hero. */
+  /* Fills the hero behind everything; clouds are positioned and sized against it. */
   .clouds {
     position: absolute;
     inset: 0;
     z-index: -1;
+    overflow: clip;
     container-type: size;
     pointer-events: none;
   }
 
-  /* :global because the classes land on the <img> rendered by <Image>. */
-  .clouds :global(.cloud) {
+  /* The wrapper places, sizes, flips and fades the cloud; it is never animated. */
+  .cloud {
     position: absolute;
     top: var(--y);
     left: var(--x);
     width: calc(var(--w) * 1cqw);
-    height: auto;
     opacity: var(--o);
     filter: blur(var(--blur));
-    translate: -50% -50%;
-    scale: var(--flip) 1;
+    transform: translate(-50%, -50%) scaleX(var(--flip));
+    animation: fade-in 1600ms ease-out backwards;
+  }
+
+  /* The image inside does the drifting, so its transform never fights the placement. */
+  .cloud :global(.cloud__image) {
+    display: block;
+    width: 100%;
+    height: auto;
     user-select: none;
     will-change: transform;
-    animation:
-      fade-in 1600ms ease-out backwards,
-      cloud-drift var(--dur) ease-in-out var(--delay) infinite alternate;
+    animation: cloud-drift var(--dur) ease-in-out var(--delay) infinite alternate;
   }
 
   @keyframes cloud-drift {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+
     to {
-      transform: translate(var(--dx), var(--dy));
+      transform: translate3d(var(--dx), var(--dy), 0);
     }
   }
 
   @media (max-width: 47.99rem) {
-    .clouds :global(.cloud) {
+    .cloud {
       top: var(--my, var(--y));
       left: var(--mx, var(--x));
       width: calc(var(--mw, var(--w)) * 1cqw);
     }
 
-    .clouds :global(.cloud--desktop) {
+    .cloud--desktop {
       display: none;
     }
   }

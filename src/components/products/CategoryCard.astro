@@ -7,13 +7,11 @@ interface Props {
   category: Category;
   /** Heading level of the card title, so it fits the page outline it is placed in. */
   headingLevel?: 2 | 3;
-  /** On phones, lay the card out sideways: text on one side, illustration on the other. */
-  wideOnMobile?: boolean;
-  /** With `wideOnMobile`, put the illustration on the left instead of the right. */
-  mirrored?: boolean;
+  /** On phones, shrink to a miniature so four cards fit in one row. */
+  compactOnMobile?: boolean;
 }
 
-const { category, headingLevel = 2, wideOnMobile = false, mirrored = false } = Astro.props;
+const { category, headingLevel = 2, compactOnMobile = false } = Astro.props;
 const Heading = `h${headingLevel}` as const;
 // Illustrations are local assets; a remote (string) source would need explicit dimensions.
 const illustration = category.image && typeof category.image.src !== 'string' ? category.image.src : undefined;
@@ -21,7 +19,7 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
 
 <!-- The whole card is the link; the illustration rises out of its top edge. -->
 <a
-  class:list={['card', `card--${category.tone}`, { 'card--wide': wideOnMobile, 'card--mirrored': mirrored }]}
+  class:list={['card', `card--${category.tone}`, { 'card--compact': compactOnMobile }]}
   href={categoryHref(category.slug)}
 >
   {
@@ -32,7 +30,7 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
           src={illustration}
           alt=""
           widths={[220, 340, 520]}
-          sizes="(max-width: 48rem) 50vw, 17rem"
+          sizes="(max-width: 48rem) 25vw, 15rem"
         />
       </span>
     )
@@ -56,8 +54,8 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
     flex-direction: column;
     justify-content: flex-end;
     height: 100%;
-    min-height: var(--card-height, clamp(11rem, 15vw, 14.5rem));
-    padding: 1rem 1rem 1rem 1.375rem;
+    min-height: var(--card-height, clamp(9.75rem, 13.2vw, 12.75rem));
+    padding: 0.875rem 0.875rem 0.875rem 1.25rem;
     border-radius: var(--radius-lg);
     background: var(--card-bg);
     box-shadow:
@@ -109,7 +107,7 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
   }
 
   .card__name {
-    font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
     font-weight: 600;
     line-height: 1.2;
   }
@@ -118,8 +116,8 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
     display: grid;
     flex: none;
     place-items: center;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: 2.25rem;
+    height: 2.25rem;
     border-radius: 50%;
     background: var(--color-cream-white);
     box-shadow: 0 0.375rem 0.75rem -0.375rem rgb(69 39 28 / 0.3);
@@ -137,40 +135,62 @@ const illustration = category.image && typeof category.image.src !== 'string' ? 
   }
 
   /*
-   * Phones, wide variant: a low, wide card — name and arrow on one side, a large
-   * illustration on the other that rises out of the top edge. Mirrored cards swap sides,
-   * so a stack of them zig-zags.
+   * Phones, compact variant: a miniature of the desktop card, so all four fit side by side
+   * even at 320px. Here everything is in normal flow, stacked and centred:
+   * illustration -> small gap -> name -> small gap -> arrow. The illustration still rises
+   * out of the top edge, and the arrow sits at the bottom so all four line up.
    */
   @media (max-width: 47.99rem) {
-    .card--wide {
-      --pop: 26%;
+    .card--compact {
+      --pop: clamp(1rem, 7vw, 1.75rem);
 
-      justify-content: center;
-      min-height: clamp(8.5rem, 34vw, 10rem);
-      padding: 1.25rem 1.5rem;
+      justify-content: flex-start;
+      min-height: 0;
+      padding: clamp(0.4rem, 2vw, 0.75rem) clamp(0.4rem, 2vw, 0.75rem) clamp(0.5rem, 2.4vw, 0.875rem);
+      border-radius: clamp(1rem, 5vw, 1.75rem);
     }
 
-    .card--wide .card__media {
-      inset: calc(-1 * var(--pop)) 3% 6% 50%;
+    .card--compact .card__media {
+      position: relative;
+      inset: auto;
+      width: 100%;
+      aspect-ratio: 6 / 5;
+      margin-top: calc(-1 * var(--pop));
     }
 
-    .card--wide.card--mirrored .card__media {
-      inset: calc(-1 * var(--pop)) 50% 6% 3%;
+    /* Fill the fixed-size box (so a squarer image cannot stretch it) and sit on its
+       bottom edge, right above the name. */
+    .card--compact :global(.card__image) {
+      position: absolute;
+      inset: 0;
+      object-position: center bottom;
     }
 
-    .card--wide .card__footer {
+    .card--compact .card__footer {
+      flex: 1;
       flex-direction: column;
-      align-items: flex-start;
-      gap: 0.875rem;
-      width: 46%;
+      align-items: center;
+      justify-content: flex-start;
+      gap: clamp(0.375rem, 2vw, 0.5rem);
+      margin-top: clamp(0.5rem, 2.6vw, 0.75rem);
+      text-align: center;
     }
 
-    .card--wide.card--mirrored .card__footer {
-      margin-inline-start: auto;
+    .card--compact .card__name {
+      font-size: clamp(0.6875rem, 3.1vw, 1rem);
+      line-height: 1.15;
     }
 
-    .card--wide .card__name {
-      font-size: clamp(1.25rem, 5.5vw, 1.5rem);
+    /* Pushed to the bottom, so arrows line up even if one name wraps to two lines. */
+    .card--compact .card__arrow {
+      width: clamp(1.375rem, 6.5vw, 2rem);
+      height: clamp(1.375rem, 6.5vw, 2rem);
+      margin-top: auto;
+    }
+
+    .card--compact .card__arrow svg {
+      width: 60%;
+      height: auto;
     }
   }
 

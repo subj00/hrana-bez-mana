@@ -197,10 +197,60 @@ const categories = await getCategories();
   .hero__categories {
     position: relative;
     z-index: 2;
-    width: min(100% - 2 * var(--page-gutter), 76rem);
+    width: min(100% - 2 * var(--page-gutter), 67rem);
     margin: clamp(-7rem, -9svh, -3rem) auto 0;
     padding-bottom: clamp(1.5rem, 4svh, 3rem);
     animation: fade-up 900ms var(--ease-out) 550ms backwards;
+  }
+
+  /*
+   * Desktop: the whole composition (header, title, cake, cards) fits exactly one screen.
+   * The hero is one viewport tall and split into two rows: the cards take what they need
+   * at the bottom, and the title and cake share whatever height is left. The cake is
+   * sized from that leftover height, so it shrinks on short laptop screens and grows on
+   * tall ones instead of pushing the cards off the bottom. Card sizes and the spacing
+   * around them also follow the viewport height.
+   */
+  @media (min-width: 48rem) {
+    .hero {
+      /* Below this the composition would get too cramped; the page then simply scrolls. */
+      height: max(100svh, 34rem);
+      min-height: 0;
+      padding-top: calc(var(--header-top) + var(--header-pill-height) + clamp(0.5rem, 2svh, 1.5rem));
+    }
+
+    .hero__stage {
+      grid-template-rows: minmax(0, 1fr);
+      min-height: 0;
+    }
+
+    .hero__title {
+      /* Also bounded by height: the lettering is about twice as wide as it is tall. */
+      width: min(100%, 38rem, 70svh);
+    }
+
+    .hero__cake {
+      align-self: stretch;
+      width: 100%;
+      height: 100%;
+      max-height: 46rem;
+      padding-block: clamp(0.25rem, 1.5svh, 1rem);
+    }
+
+    /* Fills the space the row leaves, never more, and keeps its proportions. */
+    .hero :global(.hero__cake-image) {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .hero__categories {
+      --card-height: clamp(8.25rem, min(13.2vw, 20svh), 12.75rem);
+      --cards-rise-space: clamp(1.75rem, 4.5svh, 3rem);
+
+      margin-top: 0;
+      padding-bottom: clamp(0.75rem, 3svh, 2.5rem);
+    }
   }
 
   /*
