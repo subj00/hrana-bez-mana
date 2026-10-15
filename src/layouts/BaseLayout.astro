@@ -41,6 +41,8 @@ const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
           const seen = sessionStorage.getItem('hbm-loader-seen');
           const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
           if (!seen && !calm) root.dataset.loader = 'play';
+          // Scroll reveals only hide content when they will be able to show it again.
+          if (!calm && 'IntersectionObserver' in window) root.setAttribute('data-reveal-ready', '');
         } catch {}
       })();
     </script>
@@ -68,5 +70,43 @@ const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
       <slot />
     </main>
     <Footer />
+
+    <!--
+      Scroll reveals: marks [data-reveal] elements as revealed the first time they scroll
+      into view (styles in animations.css). Starts once the cake intro has finished, so
+      nothing animates unseen behind it.
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        if (!root.hasAttribute('data-reveal-ready')) return;
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              entry.target.setAttribute('data-revealed', '');
+              observer.unobserve(entry.target);
+            }
+          },
+          { rootMargin: '0px 0px -12% 0px', threshold: 0.05 },
+        );
+
+        const start = () => {
+          for (const element of document.querySelectorAll('[data-reveal]')) observer.observe(element);
+        };
+
+        if (root.dataset.loader === 'play') {
+          const waiting = new MutationObserver(() => {
+            if (root.dataset.loader === 'play') return;
+            waiting.disconnect();
+            start();
+          });
+          waiting.observe(root, { attributes: true, attributeFilter: ['data-loader'] });
+        } else {
+          start();
+        }
+      })();
+    </script>
   </body>
 </html>

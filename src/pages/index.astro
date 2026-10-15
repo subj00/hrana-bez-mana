@@ -1,8 +1,40 @@
 ---
+import TorteSection from '@/components/cakes/TorteSection.astro';
+import ContactSection from '@/components/contact/ContactSection.astro';
 import HeroSection from '@/components/home/HeroSection.astro';
+import CategorySection from '@/components/products/CategorySection.astro';
+import { SECTION_IDS } from '@/data/navigation';
 import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCategories, getProductsByCategory } from '@/lib/catalog';
+
+const categories = await getCategories();
+const sections = await Promise.all(
+  categories.map(async (category) => ({ category, products: await getProductsByCategory(category.id) })),
+);
 ---
 
+<!-- The whole site: hero, one section per product category, then contact. -->
 <BaseLayout>
   <HeroSection />
+
+  <div class="products" id={SECTION_IDS.products}>
+    {
+      sections.map(({ category, products }, index) =>
+        category.slug === 'torte' ? (
+          <TorteSection category={category} />
+        ) : (
+          <CategorySection category={category} products={products} mirrored={index % 2 === 0} tinted={index % 2 === 1} />
+        ),
+      )
+    }
+  </div>
+
+  <ContactSection />
 </BaseLayout>
+
+<style>
+  /* "Proizvodi" in the navigation scrolls here: the top of the first category. */
+  .products {
+    scroll-margin-top: calc(var(--header-top) + var(--header-pill-height) - 1rem);
+  }
+</style>

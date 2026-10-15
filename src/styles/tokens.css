@@ -52,6 +52,10 @@
   --duration-fast: 200ms;
   --duration: 300ms;
   --duration-slow: 700ms;
+  /* Scroll reveals (see animations.css) */
+  --reveal-duration: 750ms;
+  --reveal-distance: 1.75rem;
+  --reveal-stagger: 120ms;
 
   /* Spacing */
   --space-xs: 0.25rem;
@@ -79,5 +83,6 @@
 @media (max-width: 47.99rem) {
   :root {
     --header-pill-height: 3.5rem;
+    --reveal-distance: 1rem;
   }
 }

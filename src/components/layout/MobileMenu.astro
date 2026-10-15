@@ -1,13 +1,12 @@
 ---
 import { categories } from '@/data/categories';
-import { isCurrent, navItems } from '@/data/navigation';
+import { navItems } from '@/data/navigation';
 
 interface Props {
   id: string;
 }
 
 const { id } = Astro.props;
-const { pathname } = Astro.url;
 const toneByName = new Map(categories.map((category) => [category.name, category.tone]));
 ---
 
@@ -45,11 +44,7 @@ const toneByName = new Map(categories.map((category) => [category.name, category
                     <ul class="mobile-menu__sublist" role="list">
                       {item.children.map((child, childIndex) => (
                         <li class="mobile-menu__subitem" style={`--j: ${childIndex}`}>
-                          <a
-                            class="mobile-menu__sublink"
-                            href={child.href}
-                            aria-current={isCurrent(child.href, pathname) ? 'page' : undefined}
-                          >
+                          <a class="mobile-menu__sublink" href={child.href}>
                             <span
                               class={`mobile-menu__dot mobile-menu__dot--${toneByName.get(child.label) ?? 'blush'}`}
                               aria-hidden="true"
@@ -65,11 +60,7 @@ const toneByName = new Map(categories.map((category) => [category.name, category
                   </div>
                 </>
               ) : (
-                <a
-                  class="mobile-menu__link"
-                  href={item.href}
-                  aria-current={isCurrent(item.href, pathname) ? 'page' : undefined}
-                >
+                <a class="mobile-menu__link" href={item.href}>
                   {item.label}
                 </a>
               )}

@@ -36,6 +36,41 @@
   }
 }
 
+/*
+ * Scroll reveals. Mark an element with data-reveal="up" | "left" | "right" | "scale"
+ * (optionally with --reveal-delay); the observer in BaseLayout adds data-revealed when it
+ * scrolls into view, once. Elements are only hidden while <html> has data-reveal-ready,
+ * which is set only when the observer can run, so without JavaScript everything shows.
+ * data-reveal="section" leaves the element itself still and reveals its title and
+ * ornament instead (see Section.astro).
+ */
+[data-reveal-ready] [data-reveal]:not([data-reveal='section']) {
+  transition:
+    opacity var(--reveal-duration) var(--ease-out),
+    transform var(--reveal-duration) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+[data-reveal-ready] [data-reveal='up']:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(0, var(--reveal-distance), 0);
+}
+
+[data-reveal-ready] [data-reveal='left']:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(calc(-1 * var(--reveal-distance)), 0, 0);
+}
+
+[data-reveal-ready] [data-reveal='right']:not([data-revealed]) {
+  opacity: 0;
+  transform: translate3d(var(--reveal-distance), 0, 0);
+}
+
+[data-reveal-ready] [data-reveal='scale']:not([data-revealed]) {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
 /* Users who ask for reduced motion get the final state immediately, site-wide. */
 @media (prefers-reduced-motion: reduce) {
   *,

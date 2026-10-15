@@ -7,6 +7,16 @@ export default defineConfig({
   // Enables the canonical link and absolute Open Graph URLs in BaseLayout.
   // site: 'https://example.com',
 
+  // The site is a single page; earlier page addresses lead to their sections.
+  redirects: {
+    '/proizvodi': '/#proizvodi',
+    '/proizvodi/torte': '/#torte',
+    '/proizvodi/sitni-kolaci': '/#sitni-kolaci',
+    '/proizvodi/kanapei': '/#kanapei',
+    '/proizvodi/predjela': '/#predjela',
+    '/kontakt': '/#kontakt',
+  },
+
   // Downloaded at build time and self-hosted; exposed as a CSS variable in tokens.css.
   fonts: [
     {

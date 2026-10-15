@@ -2,6 +2,7 @@
 import { Image } from 'astro:assets';
 import HeroClouds from '@/components/home/HeroClouds.astro';
 import CategoryList from '@/components/products/CategoryList.astro';
+import { SECTION_IDS } from '@/data/navigation';
 import { site } from '@/data/site';
 import { getAsset } from '@/lib/assets';
 import { getCategories } from '@/lib/catalog';
@@ -13,7 +14,7 @@ const categories = await getCategories();
 
 ---
 
-<section class="hero" aria-labelledby="hero-naslov">
+<section class="hero" id={SECTION_IDS.home} aria-labelledby="hero-naslov">
   <!-- Atmosphere: soft light, the optional background illustration, and drifting clouds. -->
   <div class="hero__atmosphere" aria-hidden="true">
     {backdrop && <Image class="hero__backdrop" src={backdrop} alt="" widths={[960, 1600, 2400]} sizes="100vw" />}
@@ -63,7 +64,7 @@ const categories = await getCategories();
 
   <div class="hero__categories">
     <h2 class="sr-only">Naša ponuda</h2>
-    <CategoryList categories={categories} layout="row" headingLevel={3} />
+    <CategoryList categories={categories} headingLevel={3} />
   </div>
 </section>
 
@@ -200,7 +201,6 @@ const categories = await getCategories();
     width: min(100% - 2 * var(--page-gutter), 67rem);
     margin: clamp(-7rem, -9svh, -3rem) auto 0;
     padding-bottom: clamp(1.5rem, 4svh, 3rem);
-    animation: fade-up 900ms var(--ease-out) 550ms backwards;
   }
 
   /*

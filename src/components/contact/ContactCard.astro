@@ -7,7 +7,7 @@ const hasDetails = Boolean(phone || email || address);
 ---
 
 <!-- Renders only the contact details that are actually set in data/site.ts. -->
-<div class="contact">
+<div class="contact" data-reveal="up">
   {
     hasDetails ? (
       <address class="contact__details">

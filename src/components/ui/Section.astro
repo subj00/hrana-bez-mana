@@ -1,0 +1,115 @@
+---
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import Container from '@/components/ui/Container.astro';
+
+interface Props {
+  /** Anchor the navigation scrolls to (`/#id`). */
+  id: string;
+  title: string;
+  /** Decorative lettering that replaces the text title; `title` becomes its alt text. */
+  titleImage?: ImageMetadata;
+  /** A faint blush band behind the section, to set alternate sections apart. */
+  tinted?: boolean;
+}
+
+const { id, title, titleImage, tinted = false } = Astro.props;
+const headingId = `${id}-naslov`;
+---
+
+<!--
+  One stop on the single page: a small ornament, a centred title, then the content.
+  Shared by every section below the hero so they read as one continuous page.
+-->
+<section
+  class:list={['section', { 'section--tinted': tinted }]}
+  id={id}
+  aria-labelledby={headingId}
+  data-reveal="section"
+>
+  <Container>
+    <h2 class="section__title" id={headingId}>
+      {
+        titleImage ? (
+          <Image
+            class="section__title-image"
+            src={titleImage}
+            alt={title}
+            widths={[360, 560, 840, 1100]}
+            sizes="(max-width: 48rem) 78vw, 28rem"
+          />
+        ) : (
+          title
+        )
+      }
+    </h2>
+    <slot />
+  </Container>
+</section>
+
+<style>
+  .section {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+    /* Lands section titles just below the floating header when scrolled to. */
+    scroll-margin-top: calc(var(--header-top) + var(--header-pill-height) - 1rem);
+  }
+
+  /* Ornament between sections: a hairline with a strawberry bead in the middle. */
+  .section::before {
+    content: '';
+    display: block;
+    width: min(14rem, 50%);
+    height: 0.625rem;
+    margin: 0 auto clamp(1.75rem, 4vw, 2.75rem);
+    background:
+      radial-gradient(circle, var(--color-strawberry) 0 0.22rem, var(--color-cream) 0.26rem 0.42rem, transparent 0.46rem),
+      linear-gradient(90deg, transparent, var(--color-pink) 25%, var(--color-pink) 75%, transparent) center / 100% 1px no-repeat;
+  }
+
+  /* Scroll reveal: the title rises in, then the ornament above it draws out from the middle. */
+  :global([data-reveal-ready]) .section__title,
+  :global([data-reveal-ready]) .section::before {
+    transition:
+      opacity var(--reveal-duration) var(--ease-out),
+      transform var(--reveal-duration) var(--ease-out);
+  }
+
+  :global([data-reveal-ready]) .section::before {
+    transition-delay: 200ms;
+  }
+
+  :global([data-reveal-ready]) .section:not([data-revealed]) .section__title {
+    opacity: 0;
+    transform: translate3d(0, var(--reveal-distance), 0);
+  }
+
+  :global([data-reveal-ready]) .section:not([data-revealed])::before {
+    opacity: 0;
+    transform: scaleX(0.3);
+  }
+
+  .section--tinted {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgb(251 229 225 / 0.5) 12%,
+      rgb(251 229 225 / 0.5) 88%,
+      transparent 100%
+    );
+  }
+
+  .section__title {
+    display: flex;
+    justify-content: center;
+    margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    font-size: clamp(2.25rem, 6vw, 3.5rem);
+    font-weight: 800;
+    color: var(--color-strawberry);
+    text-align: center;
+  }
+
+  .section :global(.section__title-image) {
+    width: min(78vw, 28rem);
+    height: auto;
+  }
+</style>

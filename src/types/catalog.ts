@@ -15,10 +15,12 @@ export type CategoryTone = 'blush' | 'vanilla' | 'sage' | 'peach';
 export interface Category {
   id: string;
   name: string;
-  /** URL-safe identifier, used in the category's route (`/proizvodi/torte`). */
+  /** URL-safe identifier, used as the anchor of the category's section (`/#torte`). */
   slug: string;
   description: string;
   image?: CatalogImage;
+  /** Decorative lettering used as the section title. */
+  titleImage?: CatalogImage;
   tone: CategoryTone;
 }
 

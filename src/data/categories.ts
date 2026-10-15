@@ -14,6 +14,7 @@ export const categories: Category[] = [
     slug: 'torte',
     description: '',
     image: illustration('category-cakes.png', 'Torta'),
+    titleImage: illustration('torte-title.png', 'Torte'),
     tone: 'blush',
   },
   {
@@ -22,6 +23,7 @@ export const categories: Category[] = [
     slug: 'sitni-kolaci',
     description: '',
     image: illustration('category-desserts.png', 'Sitni kolači'),
+    titleImage: illustration('kolaci-title.png', 'Sitni kolači'),
     tone: 'vanilla',
   },
   {
@@ -30,6 +32,7 @@ export const categories: Category[] = [
     slug: 'kanapei',
     description: '',
     image: illustration('category-canapes.png', 'Kanapei'),
+    titleImage: illustration('kanapei-title.png', 'Kanapei'),
     tone: 'sage',
   },
   {
@@ -38,6 +41,7 @@ export const categories: Category[] = [
     slug: 'predjela',
     description: '',
     image: illustration('category-appetizers.png', 'Predjela'),
+    titleImage: illustration('predjela-title.png', 'Predjela'),
     tone: 'peach',
   },
 ];

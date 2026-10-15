@@ -1,0 +1,88 @@
+---
+import { Image } from 'astro:assets';
+import ProductGrid from '@/components/products/ProductGrid.astro';
+import Section from '@/components/ui/Section.astro';
+import type { Category, Product } from '@/types/catalog';
+
+interface Props {
+  category: Category;
+  products: Product[];
+  /** Put the illustration on the right instead of the left, to vary the rhythm down the page. */
+  mirrored?: boolean;
+  tinted?: boolean;
+}
+
+const { category, products, mirrored = false, tinted = false } = Astro.props;
+const titleImage = category.titleImage && typeof category.titleImage.src !== 'string' ? category.titleImage.src : undefined;
+const illustration = category.image && typeof category.image.src !== 'string' ? category.image.src : undefined;
+---
+
+<!--
+  Section for a category without its own designed layout: its products once there are
+  any; until then a single card with the category illustration and a short note.
+-->
+<Section id={category.slug} title={category.name} titleImage={titleImage} tinted={tinted}>
+  {
+    products.length > 0 ? (
+      <ProductGrid products={products} />
+    ) : (
+      <div class:list={['teaser', `teaser--${category.tone}`, { 'teaser--mirrored': mirrored }]} data-reveal="up">
+        {illustration && (
+          <Image class="teaser__image" src={illustration} alt="" widths={[220, 360, 520]} sizes="(max-width: 48rem) 40vw, 14rem" />
+        )}
+        <p class="teaser__text">Ponuda iz ove kategorije uskoro stiže.</p>
+      </div>
+    )
+  }
+</Section>
+
+<style>
+  .teaser {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 4vw, 2rem);
+    width: min(100%, 36rem);
+    margin-inline: auto;
+    padding: clamp(1rem, 3vw, 1.5rem) clamp(1.25rem, 4vw, 2.25rem);
+    border-radius: 2rem;
+    background: var(--teaser-bg);
+    box-shadow:
+      var(--shadow-soft),
+      inset 0 0 0 1px rgb(255 255 255 / 0.6);
+  }
+
+  .teaser--mirrored {
+    flex-direction: row-reverse;
+  }
+
+  .teaser--blush {
+    --teaser-bg: var(--tone-blush);
+  }
+
+  .teaser--vanilla {
+    --teaser-bg: var(--tone-vanilla);
+  }
+
+  .teaser--sage {
+    --teaser-bg: var(--tone-sage);
+  }
+
+  .teaser--peach {
+    --teaser-bg: var(--tone-peach);
+  }
+
+  .teaser :global(.teaser__image) {
+    flex: none;
+    width: clamp(6.5rem, 30vw, 11rem);
+    height: auto;
+    filter: drop-shadow(0 0.75rem 1rem rgb(69 39 28 / 0.14));
+  }
+
+  .teaser__text {
+    flex: 1;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.2vw, 1.25rem);
+    font-weight: 700;
+    line-height: 1.35;
+  }
+</style>

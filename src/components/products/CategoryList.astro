@@ -4,22 +4,18 @@ import type { Category } from '@/types/catalog';
 
 interface Props {
   categories: Category[];
-  /**
-   * `row`: one row of four at every size; on phones the cards shrink to fit (home hero).
-   * `grid`: two columns on phones, four from tablets up (products page).
-   */
-  layout?: 'row' | 'grid';
   headingLevel?: 2 | 3;
 }
 
-const { categories, layout = 'grid', headingLevel } = Astro.props;
+const { categories, headingLevel } = Astro.props;
 ---
 
-<ul class:list={['categories', `categories--${layout}`]} role="list">
+<!-- One row of four at every size; on phones the cards shrink to fit. -->
+<ul class="categories" role="list">
   {
-    categories.map((category) => (
-      <li class="categories__item">
-        <CategoryCard category={category} headingLevel={headingLevel} compactOnMobile={layout === 'row'} />
+    categories.map((category, index) => (
+      <li class="categories__item" style={`--i: ${index}`}>
+        <CategoryCard category={category} headingLevel={headingLevel} compactOnMobile />
       </li>
     ))
   }
@@ -34,21 +30,15 @@ const { categories, layout = 'grid', headingLevel } = Astro.props;
     padding-top: var(--cards-rise-space, clamp(2.25rem, 3.5vw, 3rem));
   }
 
-  .categories--grid {
-    row-gap: clamp(3rem, 6vw, 4rem);
+  /* The cards rise in one after another as part of the hero's entrance (CSS animation,
+     so it also waits behind the cake intro). */
+  .categories__item {
+    animation: fade-up 750ms var(--ease-out) calc(500ms + var(--i) * var(--reveal-stagger)) backwards;
   }
 
   @media (max-width: 47.99rem) {
-    .categories {
-      --card-height: 10.5rem;
-    }
-
-    .categories--grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
     /* Still four across: narrow gaps, and room above for the illustrations to rise into. */
-    .categories--row {
+    .categories {
       gap: clamp(0.375rem, 2vw, 0.75rem);
       padding-top: clamp(1.25rem, 6vw, 2.25rem);
     }

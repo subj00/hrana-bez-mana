@@ -1,16 +1,14 @@
 ---
 import MobileMenu from '@/components/layout/MobileMenu.astro';
 import ProductsDropdown from '@/components/layout/ProductsDropdown.astro';
-import { isCurrent, navItems, ROUTES } from '@/data/navigation';
+import { navItems, SECTION_IDS, sectionHref } from '@/data/navigation';
 import { site } from '@/data/site';
-
-const { pathname } = Astro.url;
 ---
 
 <header class="site-header">
   <div class="site-header__pill">
     <!-- Placeholder until the real logo exists. -->
-    <a class="site-header__logo" href={ROUTES.home} aria-label={`${site.name} — početna`}>LOGO</a>
+    <a class="site-header__logo" href={sectionHref(SECTION_IDS.home)} aria-label={`${site.name} — početna`}>LOGO</a>
 
     <nav class="site-nav" aria-label="Glavna navigacija">
       <ul class="site-nav__list" role="list">
@@ -18,13 +16,9 @@ const { pathname } = Astro.url;
           navItems.map((item) => (
             <li>
               {item.children ? (
-                <ProductsDropdown item={item} current={isCurrent(item.href, pathname)} />
+                <ProductsDropdown item={item} />
               ) : (
-                <a
-                  class="site-nav__link"
-                  href={item.href}
-                  aria-current={isCurrent(item.href, pathname) ? 'page' : undefined}
-                >
+                <a class="site-nav__link" href={item.href}>
                   {item.label}
                 </a>
               )}
@@ -84,12 +78,52 @@ const { pathname } = Astro.url;
       toggle.focus();
     });
 
+    // Picking a category scrolls the page; close the panel instead of leaving it open.
+    for (const link of dropdown.querySelectorAll<HTMLAnchorElement>('.dropdown__link')) {
+      link.addEventListener('click', () => {
+        setOpen(false);
+        suppress();
+        link.blur();
+      });
+    }
+
     dropdown.addEventListener('mouseleave', release);
     dropdown.addEventListener('focusout', (event) => {
       if (event.relatedTarget instanceof Node && dropdown.contains(event.relatedTarget)) return;
       setOpen(false);
       release();
     });
+  }
+
+  /* ---------- Current section ---------- */
+  // Marks the navigation links (desktop, dropdown and mobile menu) of the section that
+  // crosses the middle of the screen. "Proizvodi" stays marked through all categories.
+  {
+    const links = [...document.querySelectorAll<HTMLAnchorElement>('header a[href^="/#"]')];
+    const products = document.getElementById('proizvodi');
+    const targets = new Set(
+      links.map((link) => document.getElementById(link.hash.slice(1))).filter((el): el is HTMLElement => !!el),
+    );
+
+    const mark = (section: Element) => {
+      for (const link of links) {
+        const id = link.hash.slice(1);
+        const current =
+          id === section.id || (id === 'proizvodi' && !!products && products.contains(section) && section !== products);
+        link.toggleAttribute('aria-current', current);
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting && entry.target.id !== 'proizvodi') mark(entry.target);
+        }
+      },
+      { rootMargin: '-45% 0px -50% 0px' },
+    );
+
+    for (const target of targets) observer.observe(target);
   }
 
   /* ---------- Mobile cloud menu ---------- */

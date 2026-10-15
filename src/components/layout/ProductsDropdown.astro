@@ -5,20 +5,19 @@ import type { NavItem } from '@/types/site';
 
 interface Props {
   item: NavItem;
-  current: boolean;
 }
 
-const { item, current } = Astro.props;
+const { item } = Astro.props;
 const panelId = 'proizvodi-meni';
 const toneBySlug = new Map(categories.map((category) => [categoryHref(category.slug), category.tone]));
 ---
 
 <!--
-  "Proizvodi" stays a real link to the overview page; the chevron next to it is the
+  "Proizvodi" stays a real link (to the top of the products); the chevron next to it is the
   disclosure button. The panel opens on hover, on keyboard focus and on click.
 -->
 <div class="dropdown" data-dropdown>
-  <a class="site-nav__link" href={item.href} aria-current={current ? 'page' : undefined}>
+  <a class="site-nav__link" href={item.href}>
     {item.label}
   </a>
   <button
@@ -138,7 +137,8 @@ const toneBySlug = new Map(categories.map((category) => [categoryHref(category.s
   }
 
   .dropdown__link:hover,
-  .dropdown__link:focus-visible {
+  .dropdown__link:focus-visible,
+  .dropdown__link[aria-current] {
     background: rgb(255 255 255 / 0.85);
     transform: translateX(0.25rem);
   }
