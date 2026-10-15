@@ -1,0 +1,376 @@
+---
+import { categories } from '@/data/categories';
+import { isCurrent, navItems } from '@/data/navigation';
+
+interface Props {
+  id: string;
+}
+
+const { id } = Astro.props;
+const { pathname } = Astro.url;
+const toneByName = new Map(categories.map((category) => [category.name, category.tone]));
+---
+
+<!-- Cloud-shaped mobile navigation; opened by the hamburger in Header.astro. -->
+<div class="mobile-menu" id={id} data-menu>
+  <div class="mobile-menu__scrim" data-menu-close></div>
+
+  <div class="mobile-menu__cloud">
+    <span class="mobile-menu__puff mobile-menu__puff--1" aria-hidden="true"></span>
+    <span class="mobile-menu__puff mobile-menu__puff--2" aria-hidden="true"></span>
+    <span class="mobile-menu__puff mobile-menu__puff--3" aria-hidden="true"></span>
+
+    <nav class="mobile-menu__body" aria-label="Mobilna navigacija">
+      <ul class="mobile-menu__list" role="list">
+        {
+          navItems.map((item, index) => (
+            <li class:list={['mobile-menu__item', { 'mobile-menu__item--group': item.children }]} style={`--i: ${index}`}>
+              {item.children ? (
+                <>
+                  <button
+                    class="mobile-menu__link mobile-menu__group"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls={`${id}-${index}`}
+                    data-submenu-toggle
+                  >
+                    {item.label}
+                    <span class="mobile-menu__chevron" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" width="16" height="16">
+                        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  </button>
+                  <div class="mobile-menu__sub" id={`${id}-${index}`}>
+                    <ul class="mobile-menu__sublist" role="list">
+                      {item.children.map((child, childIndex) => (
+                        <li class="mobile-menu__subitem" style={`--j: ${childIndex}`}>
+                          <a
+                            class="mobile-menu__sublink"
+                            href={child.href}
+                            aria-current={isCurrent(child.href, pathname) ? 'page' : undefined}
+                          >
+                            <span
+                              class={`mobile-menu__dot mobile-menu__dot--${toneByName.get(child.label) ?? 'blush'}`}
+                              aria-hidden="true"
+                            />
+                            <span class="mobile-menu__sublabel">{child.label}</span>
+                            <svg class="mobile-menu__subarrow" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                              <path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </>
+              ) : (
+                <a
+                  class="mobile-menu__link"
+                  href={item.href}
+                  aria-current={isCurrent(item.href, pathname) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<style>
+  /* Closed: invisible and out of the tab order; nothing here takes clicks. */
+  .mobile-menu {
+    visibility: hidden;
+    transition: visibility 0s var(--duration);
+  }
+
+  .mobile-menu[data-open] {
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .mobile-menu__scrim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgb(69 39 28 / 0.16);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: auto;
+    transition: opacity var(--duration) ease;
+  }
+
+  /* The cloud: a rounded body plus three puffs along its top edge. A drop-shadow filter
+     (rather than box-shadow) shades the combined silhouette as one shape. */
+  .mobile-menu__cloud {
+    position: fixed;
+    top: calc(var(--header-top) + var(--header-pill-height) + 2.75rem);
+    inset-inline: var(--page-gutter);
+    filter: drop-shadow(0 1.25rem 1.5rem rgb(232 141 148 / 0.35)) drop-shadow(0 2px 3px rgb(69 39 28 / 0.06));
+    opacity: 0;
+    transform: translateY(-0.75rem) scale(0.96);
+    transform-origin: 70% 0;
+    pointer-events: auto;
+    transition:
+      opacity var(--duration) ease,
+      transform 450ms var(--ease-out);
+  }
+
+  .mobile-menu[data-open] .mobile-menu__scrim {
+    opacity: 1;
+  }
+
+  .mobile-menu[data-open] .mobile-menu__cloud {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mobile-menu__puff {
+    position: absolute;
+    border-radius: 50%;
+    background: var(--color-cream-white);
+  }
+
+  .mobile-menu__puff--1 {
+    top: -1.75rem;
+    left: 10%;
+    width: 5.5rem;
+    aspect-ratio: 1;
+  }
+
+  .mobile-menu__puff--2 {
+    top: -2.5rem;
+    left: 30%;
+    width: 7.5rem;
+    aspect-ratio: 1;
+  }
+
+  .mobile-menu__puff--3 {
+    top: -1.5rem;
+    right: 14%;
+    width: 6rem;
+    aspect-ratio: 1;
+  }
+
+  .mobile-menu__body {
+    position: relative;
+    max-height: calc(100svh - var(--header-top) - var(--header-pill-height) - 4rem);
+    overflow-y: auto;
+    padding: 1.25rem;
+    border-radius: 2.25rem;
+    background: linear-gradient(175deg, var(--color-cream-white) 0%, var(--color-cream-white) 25%, var(--color-blush) 100%);
+  }
+
+  .mobile-menu__list {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .mobile-menu__item {
+    opacity: 0;
+    transform: translateY(0.5rem);
+    transition:
+      opacity var(--duration) ease,
+      transform var(--duration) var(--ease-out);
+  }
+
+  .mobile-menu[data-open] .mobile-menu__item {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(100ms + var(--i) * 60ms);
+  }
+
+  .mobile-menu__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.9rem 1.375rem;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: rgb(255 255 255 / 0.7);
+    box-shadow: 0 1px 0 rgb(255 255 255 / 0.9) inset;
+    font-family: var(--font-display);
+    font-size: 1.1875rem;
+    font-weight: 600;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color var(--duration) ease;
+  }
+
+  .mobile-menu__link:hover {
+    background: var(--color-cream-white);
+  }
+
+  .mobile-menu__link[aria-current] {
+    background: var(--color-pink);
+  }
+
+  /*
+   * "Proizvodi" group. Expanded, the whole group turns into one soft blush pocket, with
+   * the row it was opened from on top and the categories nested inside, so it reads as
+   * part of the cloud rather than a separate dropdown.
+   */
+  .mobile-menu__item--group {
+    border-radius: 1.75rem;
+    transition: background-color var(--duration) ease;
+  }
+
+  .mobile-menu__item--group[data-expanded] {
+    background: rgb(251 229 225 / 0.85);
+  }
+
+  .mobile-menu__item--group[data-expanded] .mobile-menu__group {
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .mobile-menu__chevron {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--color-blush);
+    transition:
+      background-color var(--duration) ease,
+      transform 400ms var(--ease-out);
+  }
+
+  .mobile-menu__group[aria-expanded='true'] .mobile-menu__chevron {
+    background: var(--color-cream-white);
+    transform: rotate(180deg);
+  }
+
+  /* Expands by animating a grid row from 0fr to 1fr: smooth height without measuring. */
+  .mobile-menu__sub {
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    transition:
+      grid-template-rows 400ms var(--ease-out),
+      visibility 0s 400ms;
+  }
+
+  .mobile-menu__group[aria-expanded='true'] + .mobile-menu__sub {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  .mobile-menu__sublist {
+    min-height: 0;
+    overflow: hidden;
+    padding-inline: 0.5rem;
+  }
+
+  .mobile-menu__sublist > li:last-child {
+    padding-bottom: 0.5rem;
+  }
+
+  /* Categories slide in one after another as the group opens. */
+  .mobile-menu__subitem {
+    opacity: 0;
+    transform: translateY(-0.375rem);
+    transition:
+      opacity var(--duration) ease,
+      transform var(--duration) var(--ease-out);
+  }
+
+  .mobile-menu__group[aria-expanded='true'] + .mobile-menu__sub .mobile-menu__subitem {
+    opacity: 1;
+    transform: none;
+    transition-delay: calc(80ms + var(--j) * 50ms);
+  }
+
+  .mobile-menu__sublink {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    min-height: 3.25rem;
+    padding: 0.5rem 1rem 0.5rem 0.875rem;
+    border-radius: 1.25rem;
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color var(--duration) ease;
+  }
+
+  /* Hairline between categories, inset from the edges. */
+  .mobile-menu__subitem + .mobile-menu__subitem .mobile-menu__sublink::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    inset-inline: 1rem;
+    height: 1px;
+    background: rgb(69 39 28 / 0.07);
+    transition: opacity var(--duration) ease;
+  }
+
+  .mobile-menu__sublink:hover,
+  .mobile-menu__sublink:active,
+  .mobile-menu__sublink[aria-current] {
+    background: rgb(255 252 248 / 0.8);
+  }
+
+  /* The hairline would cut through a highlighted row. */
+  .mobile-menu__sublink:hover::before,
+  .mobile-menu__sublink:active::before,
+  .mobile-menu__sublink[aria-current]::before {
+    opacity: 0;
+  }
+
+  .mobile-menu__sublabel {
+    flex: 1;
+  }
+
+  /* Small pastel bead in the category's tone, with a cream ring. */
+  .mobile-menu__dot {
+    flex: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--color-cream-white);
+  }
+
+  .mobile-menu__dot--blush {
+    background: var(--tone-blush-solid);
+  }
+
+  .mobile-menu__dot--vanilla {
+    background: var(--tone-vanilla-solid);
+  }
+
+  .mobile-menu__dot--sage {
+    background: var(--tone-sage-solid);
+  }
+
+  .mobile-menu__dot--peach {
+    background: var(--tone-peach-solid);
+  }
+
+  .mobile-menu__subarrow {
+    flex: none;
+    color: var(--color-text-muted);
+    transition: transform var(--duration) var(--ease-out);
+  }
+
+  .mobile-menu__sublink:hover .mobile-menu__subarrow {
+    transform: translateX(2px);
+  }
+
+  /* Desktop never shows the cloud menu. */
+  @media (min-width: 48rem) {
+    .mobile-menu {
+      display: none;
+    }
+  }
+</style>

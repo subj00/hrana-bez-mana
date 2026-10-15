@@ -1,7 +1,6 @@
 /*
- * Shared motion language: entrance keyframes used by the header and hero, and the
- * scroll-reveal states toggled by the script in BaseLayout. Only opacity and transform
- * are animated, so nothing here causes layout shifts.
+ * Shared motion language. Only opacity and transform are animated, so nothing here
+ * causes layout shifts.
  */
 @keyframes fade-in {
   from {
@@ -30,21 +29,11 @@
   }
 }
 
-/*
- * Scroll reveal. Elements are hidden only after the script has set
- * `data-reveal-ready` on <html>, so content stays visible if JavaScript fails.
- */
-[data-reveal-ready] [data-reveal] {
-  opacity: 0;
-  transform: translateY(1.5rem);
-  transition:
-    opacity var(--duration-slow) ease-out,
-    transform var(--duration-slow) var(--ease-out);
-}
-
-[data-reveal-ready] [data-reveal][data-revealed] {
-  opacity: 1;
-  transform: none;
+/* Gentle bobbing for decorations; pair with `animation-direction: alternate`. */
+@keyframes float {
+  to {
+    transform: translateY(-0.6rem) rotate(3deg);
+  }
 }
 
 /* Users who ask for reduced motion get the final state immediately, site-wide. */

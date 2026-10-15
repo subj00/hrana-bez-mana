@@ -1,6 +1,8 @@
 export interface NavItem {
   label: string;
   href: string;
+  /** Sub-pages, shown in a dropdown (desktop) or an expandable group (mobile). */
+  children?: NavItem[];
 }
 
 export interface SocialLink {

@@ -1,0 +1,64 @@
+---
+import CategoryCard from '@/components/products/CategoryCard.astro';
+import type { Category } from '@/types/catalog';
+
+interface Props {
+  categories: Category[];
+  /**
+   * `row`: one row of four; on phones a single column of wide cards (home hero).
+   * `grid`: two columns on phones, four from tablets up (products page).
+   */
+  layout?: 'row' | 'grid';
+  headingLevel?: 2 | 3;
+}
+
+const { categories, layout = 'grid', headingLevel } = Astro.props;
+---
+
+<ul class:list={['categories', `categories--${layout}`]} role="list">
+  {
+    categories.map((category, index) => (
+      <li class="categories__item">
+        <CategoryCard
+          category={category}
+          headingLevel={headingLevel}
+          wideOnMobile={layout === 'row'}
+          mirrored={layout === 'row' && index % 2 === 1}
+        />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  /* Room above the cards for the illustrations that rise out of them. */
+  .categories {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: clamp(0.75rem, 1.6vw, 1.5rem);
+    padding-top: clamp(2.5rem, 4vw, 3.5rem);
+  }
+
+  .categories--grid {
+    row-gap: clamp(3rem, 6vw, 4rem);
+  }
+
+  @media (max-width: 47.99rem) {
+    .categories {
+      --card-height: 10.5rem;
+    }
+
+    .categories--grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    /* One centred column; the row gap leaves room for each illustration to rise out of its card. */
+    .categories--row {
+      grid-template-columns: minmax(0, 1fr);
+      row-gap: clamp(2.5rem, 9vw, 3.25rem);
+      width: min(100%, 28rem);
+      margin-inline: auto;
+      padding-top: clamp(2.5rem, 9vw, 3.25rem);
+    }
+  }
+</style>

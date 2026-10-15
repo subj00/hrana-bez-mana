@@ -1,0 +1,198 @@
+---
+import { Image } from 'astro:assets';
+import { categoryHref } from '@/data/navigation';
+import type { Category } from '@/types/catalog';
+
+interface Props {
+  category: Category;
+  /** Heading level of the card title, so it fits the page outline it is placed in. */
+  headingLevel?: 2 | 3;
+  /** On phones, lay the card out sideways: text on one side, illustration on the other. */
+  wideOnMobile?: boolean;
+  /** With `wideOnMobile`, put the illustration on the left instead of the right. */
+  mirrored?: boolean;
+}
+
+const { category, headingLevel = 2, wideOnMobile = false, mirrored = false } = Astro.props;
+const Heading = `h${headingLevel}` as const;
+// Illustrations are local assets; a remote (string) source would need explicit dimensions.
+const illustration = category.image && typeof category.image.src !== 'string' ? category.image.src : undefined;
+---
+
+<!-- The whole card is the link; the illustration rises out of its top edge. -->
+<a
+  class:list={['card', `card--${category.tone}`, { 'card--wide': wideOnMobile, 'card--mirrored': mirrored }]}
+  href={categoryHref(category.slug)}
+>
+  {
+    illustration && (
+      <span class="card__media">
+        <Image
+          class="card__image"
+          src={illustration}
+          alt=""
+          widths={[220, 340, 520]}
+          sizes="(max-width: 48rem) 50vw, 17rem"
+        />
+      </span>
+    )
+  }
+  <span class="card__footer">
+    <Heading class="card__name">{category.name}</Heading>
+    <span class="card__arrow" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="18" height="18">
+        <path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </span>
+  </span>
+</a>
+
+<style>
+  .card {
+    --pop: 22%;
+
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    min-height: var(--card-height, clamp(11rem, 15vw, 14.5rem));
+    padding: 1rem 1rem 1rem 1.375rem;
+    border-radius: var(--radius-lg);
+    background: var(--card-bg);
+    box-shadow:
+      var(--shadow-soft),
+      inset 0 0 0 1px rgb(255 255 255 / 0.6);
+    text-decoration: none;
+    transition:
+      transform 400ms var(--ease-out),
+      box-shadow 400ms ease;
+  }
+
+  .card--blush {
+    --card-bg: var(--tone-blush);
+  }
+
+  .card--vanilla {
+    --card-bg: var(--tone-vanilla);
+  }
+
+  .card--sage {
+    --card-bg: var(--tone-sage);
+  }
+
+  .card--peach {
+    --card-bg: var(--tone-peach);
+  }
+
+  /* Illustration area: the top of the card, extended upwards past its edge. */
+  .card__media {
+    position: absolute;
+    inset: calc(-1 * var(--pop)) 6% 34% 6%;
+    pointer-events: none;
+  }
+
+  .card :global(.card__image) {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 0.75rem 0.75rem rgb(69 39 28 / 0.14));
+    transition: transform 400ms var(--ease-out);
+  }
+
+  .card__footer {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .card__name {
+    font-size: clamp(1.0625rem, 1.5vw, 1.375rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .card__arrow {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--color-cream-white);
+    box-shadow: 0 0.375rem 0.75rem -0.375rem rgb(69 39 28 / 0.3);
+    transition:
+      background-color var(--duration) ease,
+      color var(--duration) ease;
+  }
+
+  .card__arrow svg {
+    transition: transform var(--duration) var(--ease-out);
+  }
+
+  .card:active {
+    transform: scale(0.98);
+  }
+
+  /*
+   * Phones, wide variant: a low, wide card — name and arrow on one side, a large
+   * illustration on the other that rises out of the top edge. Mirrored cards swap sides,
+   * so a stack of them zig-zags.
+   */
+  @media (max-width: 47.99rem) {
+    .card--wide {
+      --pop: 26%;
+
+      justify-content: center;
+      min-height: clamp(8.5rem, 34vw, 10rem);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .card--wide .card__media {
+      inset: calc(-1 * var(--pop)) 3% 6% 50%;
+    }
+
+    .card--wide.card--mirrored .card__media {
+      inset: calc(-1 * var(--pop)) 50% 6% 3%;
+    }
+
+    .card--wide .card__footer {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.875rem;
+      width: 46%;
+    }
+
+    .card--wide.card--mirrored .card__footer {
+      margin-inline-start: auto;
+    }
+
+    .card--wide .card__name {
+      font-size: clamp(1.25rem, 5.5vw, 1.5rem);
+    }
+  }
+
+  @media (hover: hover) {
+    .card:hover {
+      box-shadow:
+        var(--shadow-float),
+        inset 0 0 0 1px rgb(255 255 255 / 0.6);
+      transform: translateY(-0.375rem);
+    }
+
+    .card:hover :global(.card__image) {
+      transform: translateY(-0.25rem) scale(1.04);
+    }
+
+    .card:hover .card__arrow {
+      background: var(--color-chocolate);
+      color: var(--color-cream-white);
+    }
+
+    .card:hover .card__arrow svg {
+      transform: translateX(2px);
+    }
+  }
+</style>

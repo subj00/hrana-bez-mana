@@ -11,16 +11,47 @@ const { product } = Astro.props;
 const [image] = product.images;
 ---
 
-<article>
+<article class="product">
   {
     image &&
       (typeof image.src === 'string' ? (
-        <img src={image.src} alt={image.alt} loading="lazy" decoding="async" />
+        <img class="product__image" src={image.src} alt={image.alt} loading="lazy" decoding="async" />
       ) : (
-        <Image src={image.src} alt={image.alt} />
+        <Image class="product__image" src={image.src} alt={image.alt} widths={[320, 640]} sizes="18rem" />
       ))
   }
-  <h4>{product.name}</h4>
-  <p>{product.description}</p>
-  {product.price !== undefined && <p>{formatPrice(product.price)}</p>}
+  <h2 class="product__name">{product.name}</h2>
+  <p class="product__description">{product.description}</p>
+  {product.price !== undefined && <p class="product__price">{formatPrice(product.price)}</p>}
 </article>
+
+<style>
+  .product {
+    display: grid;
+    gap: var(--space-sm);
+    height: 100%;
+    padding: 1.25rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .product :global(.product__image) {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+  }
+
+  .product__name {
+    font-size: 1.25rem;
+  }
+
+  .product__description {
+    color: var(--color-text-muted);
+  }
+
+  .product__price {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+</style>

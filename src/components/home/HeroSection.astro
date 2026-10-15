@@ -1,0 +1,242 @@
+---
+import { Image } from 'astro:assets';
+import HeroClouds from '@/components/home/HeroClouds.astro';
+import CategoryList from '@/components/products/CategoryList.astro';
+import { site } from '@/data/site';
+import { getAsset } from '@/lib/assets';
+import { getCategories } from '@/lib/catalog';
+
+const title = getAsset('hero-title.png');
+const cake = getAsset('hero-cake.png');
+const backdrop = getAsset('hero-background.png');
+const categories = await getCategories();
+
+---
+
+<section class="hero" aria-labelledby="hero-naslov">
+  <!-- Atmosphere: soft light, the optional background illustration, and drifting clouds. -->
+  <div class="hero__atmosphere" aria-hidden="true">
+    {backdrop && <Image class="hero__backdrop" src={backdrop} alt="" widths={[960, 1600, 2400]} sizes="100vw" />}
+    <span class="hero__mist hero__mist--1"></span>
+    <span class="hero__mist hero__mist--2"></span>
+    <span class="hero__mist hero__mist--3"></span>
+  </div>
+  <HeroClouds />
+
+  <div class="hero__stage">
+    <div class="hero__title">
+      <h1 id="hero-naslov">
+        {
+          title ? (
+            <Image
+              class="hero__title-image"
+              src={title}
+              alt={site.name}
+              widths={[480, 760, 1100, 1500]}
+              sizes="(max-width: 48rem) 88vw, 40vw"
+              loading="eager"
+              fetchpriority="high"
+            />
+          ) : (
+            // Only until hero-title.png exists.
+            <span class="hero__title-text">{site.name}</span>
+          )
+        }
+      </h1>
+    </div>
+
+    {
+      cake && (
+        <div class="hero__cake" style={`--cake-ratio: ${cake.width / cake.height}`}>
+          <Image
+            class="hero__cake-image"
+            src={cake}
+            alt="Velika ukrašena torta"
+            widths={[480, 760, 1100, 1500]}
+            sizes="(max-width: 48rem) 96vw, 50vw"
+            loading="eager"
+          />
+        </div>
+      )
+    }
+  </div>
+
+  <div class="hero__categories">
+    <h2 class="sr-only">Naša ponuda</h2>
+    <CategoryList categories={categories} layout="row" headingLevel={3} />
+  </div>
+</section>
+
+<style>
+  /*
+   * Desktop: title on the left, the cake large on the right, and the four category cards
+   * along the bottom, lifted up so they overlap the foot of the scene. The hero slides up
+   * under the floating header so the atmosphere fills the whole first screen.
+   */
+  .hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 100svh;
+    margin-top: calc(-1 * var(--header-offset));
+    padding-top: var(--header-offset);
+    overflow: clip;
+    isolation: isolate;
+    container-type: inline-size;
+  }
+
+  /* ---------- Atmosphere ---------- */
+
+  .hero__atmosphere {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    background:
+      radial-gradient(60% 55% at 72% 42%, rgb(255 252 248 / 0.95) 0%, transparent 70%),
+      radial-gradient(45% 40% at 18% 30%, rgb(251 229 225 / 0.9) 0%, transparent 70%),
+      linear-gradient(180deg, var(--color-blush) 0%, var(--color-cream) 55%, var(--color-cream) 100%);
+  }
+
+  .hero :global(.hero__backdrop) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Big, heavily blurred ellipses read as soft clouds of light. */
+  .hero__mist {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(48px);
+    opacity: 0.9;
+  }
+
+  .hero__mist--1 {
+    top: 6%;
+    left: 52%;
+    width: 46%;
+    height: 58%;
+    background: var(--color-cream-white);
+  }
+
+  .hero__mist--2 {
+    top: 48%;
+    left: -8%;
+    width: 42%;
+    height: 40%;
+    background: var(--color-pink);
+    opacity: 0.35;
+  }
+
+  .hero__mist--3 {
+    right: -6%;
+    bottom: 4%;
+    width: 34%;
+    height: 34%;
+    background: var(--color-sage);
+    opacity: 0.45;
+  }
+
+  /* ---------- Title and cake ---------- */
+
+  .hero__stage {
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    align-items: center;
+    gap: clamp(1rem, 3vw, 3rem);
+    width: min(100% - 2 * var(--page-gutter), 84rem);
+    margin-inline: auto;
+  }
+
+  .hero__title {
+    position: relative;
+    justify-self: center;
+    width: min(100%, 38rem);
+    /* Sits a little above the optical centre, as in the reference. */
+    translate: 0 -8%;
+    animation: fade-up 900ms var(--ease-out) 150ms backwards;
+  }
+
+  .hero__title h1 {
+    position: relative;
+  }
+
+  .hero :global(.hero__title-image) {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 0.75rem 1.5rem rgb(232 141 148 / 0.25));
+  }
+
+  .hero__title-text {
+    display: block;
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .hero__cake {
+    --cake-height: min(66svh, 46rem);
+
+    position: relative;
+    justify-self: center;
+    width: min(100%, var(--cake-height) * var(--cake-ratio));
+    animation: rise-in 1100ms var(--ease-out) 300ms backwards;
+  }
+
+  .hero :global(.hero__cake-image) {
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 2rem 2.5rem rgb(232 141 148 / 0.35));
+  }
+
+  /* ---------- Category cards ---------- */
+
+  .hero__categories {
+    position: relative;
+    z-index: 2;
+    width: min(100% - 2 * var(--page-gutter), 76rem);
+    margin: clamp(-7rem, -9svh, -3rem) auto 0;
+    padding-bottom: clamp(1.5rem, 4svh, 3rem);
+    animation: fade-up 900ms var(--ease-out) 550ms backwards;
+  }
+
+  /*
+   * Phones and small tablets: a dedicated stacked composition — title, cake, then the
+   * cards — rather than the desktop layout shrunk. No forced full-screen height.
+   */
+  @media (max-width: 47.99rem) {
+    .hero {
+      min-height: 0;
+    }
+
+    .hero__stage {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+      gap: clamp(0.25rem, 2vw, 1rem);
+      padding-top: var(--space-sm);
+    }
+
+    .hero__title {
+      width: min(88%, 28rem);
+      translate: none;
+    }
+
+    .hero__title-text {
+      font-size: clamp(2.75rem, 13vw, 4.5rem);
+      text-align: center;
+    }
+
+    .hero__cake {
+      --cake-height: 54svh;
+
+      width: min(100%, 32rem, var(--cake-height) * var(--cake-ratio));
+    }
+
+    .hero__categories {
+      margin-top: -2rem;
+    }
+  }
+</style>

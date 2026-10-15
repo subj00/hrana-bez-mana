@@ -1,77 +1,288 @@
 ---
-import Navigation from '@/components/layout/Navigation.astro';
-import { SECTION_IDS } from '@/data/navigation';
+import MobileMenu from '@/components/layout/MobileMenu.astro';
+import ProductsDropdown from '@/components/layout/ProductsDropdown.astro';
+import { isCurrent, navItems, ROUTES } from '@/data/navigation';
 import { site } from '@/data/site';
 
-const brandLines = site.name.split(' ');
+const { pathname } = Astro.url;
 ---
 
-<header class="header" data-header>
-  <a class="brand" href={`#${SECTION_IDS.home}`} aria-label={site.name}>
-    {brandLines.map((line) => <span>{line}</span>)}
-  </a>
-  <Navigation />
+<header class="site-header">
+  <div class="site-header__pill">
+    <!-- Placeholder until the real logo exists. -->
+    <a class="site-header__logo" href={ROUTES.home} aria-label={`${site.name} — početna`}>LOGO</a>
+
+    <nav class="site-nav" aria-label="Glavna navigacija">
+      <ul class="site-nav__list" role="list">
+        {
+          navItems.map((item) => (
+            <li>
+              {item.children ? (
+                <ProductsDropdown item={item} current={isCurrent(item.href, pathname)} />
+              ) : (
+                <a
+                  class="site-nav__link"
+                  href={item.href}
+                  aria-current={isCurrent(item.href, pathname) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              )}
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <button
+      class="site-header__toggle"
+      type="button"
+      aria-label="Otvori meni"
+      aria-expanded="false"
+      aria-controls="mobilni-meni"
+      data-menu-toggle
+    >
+      <span class="site-header__bars" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </span>
+    </button>
+  </div>
+
+  <MobileMenu id="mobilni-meni" />
 </header>
 
 <script>
-  // Flags the header once the page is scrolled so it can switch to its solid, compact look.
-  const header = document.querySelector<HTMLElement>('[data-header]');
+  /* ---------- Desktop "Proizvodi" dropdown ---------- */
+  for (const dropdown of document.querySelectorAll<HTMLElement>('[data-dropdown]')) {
+    const toggle = dropdown.querySelector<HTMLButtonElement>('[data-dropdown-toggle]');
+    if (!toggle) continue;
 
-  if (header) {
-    const update = () => header.toggleAttribute('data-scrolled', window.scrollY > 8);
+    const isOpen = () => toggle.getAttribute('aria-expanded') === 'true';
+    const setOpen = (open: boolean) => toggle.setAttribute('aria-expanded', String(open));
+    // Hover and focus also open the panel (CSS); `data-suppress` keeps it shut after an
+    // explicit close until the pointer or focus leaves.
+    const suppress = () => dropdown.setAttribute('data-suppress', '');
+    const release = () => dropdown.removeAttribute('data-suppress');
 
-    update();
-    window.addEventListener('scroll', update, { passive: true });
+    toggle.addEventListener('click', () => {
+      const open = !isOpen();
+      setOpen(open);
+      if (open) release();
+      else suppress();
+    });
+
+    document.addEventListener('click', (event) => {
+      if (isOpen() && event.target instanceof Node && !dropdown.contains(event.target)) setOpen(false);
+    });
+
+    dropdown.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      suppress();
+      toggle.focus();
+    });
+
+    dropdown.addEventListener('mouseleave', release);
+    dropdown.addEventListener('focusout', (event) => {
+      if (event.relatedTarget instanceof Node && dropdown.contains(event.relatedTarget)) return;
+      setOpen(false);
+      release();
+    });
+  }
+
+  /* ---------- Mobile cloud menu ---------- */
+  const root = document.documentElement;
+  const menu = document.querySelector<HTMLElement>('[data-menu]');
+  const menuToggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+
+  if (menu && menuToggle) {
+    const isOpen = () => menuToggle.getAttribute('aria-expanded') === 'true';
+
+    const setOpen = (open: boolean, { restoreFocus = false } = {}) => {
+      menuToggle.setAttribute('aria-expanded', String(open));
+      menuToggle.setAttribute('aria-label', open ? 'Zatvori meni' : 'Otvori meni');
+      menu.toggleAttribute('data-open', open);
+      root.toggleAttribute('data-menu-open', open);
+
+      if (open) menu.querySelector<HTMLElement>('a, button')?.focus({ preventScroll: true });
+      else if (restoreFocus) menuToggle.focus();
+    };
+
+    menuToggle.addEventListener('click', () => setOpen(!isOpen()));
+
+    menu.addEventListener('click', (event) => {
+      if (!(event.target instanceof Element)) return;
+      if (event.target.closest('a, [data-menu-close]')) setOpen(false);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && isOpen()) setOpen(false, { restoreFocus: true });
+    });
+
+    // Tabbing out of the menu (past its last item, or back before the toggle) closes it.
+    const header = menuToggle.closest('header');
+    header?.addEventListener('focusout', (event) => {
+      if (isOpen() && event.relatedTarget instanceof Node && !header.contains(event.relatedTarget)) {
+        setOpen(false);
+      }
+    });
+
+    // Growing into the desktop layout must not leave the page scroll-locked.
+    window.matchMedia('(min-width: 48rem)').addEventListener('change', (event) => {
+      if (event.matches) setOpen(false);
+    });
+
+    for (const subToggle of menu.querySelectorAll<HTMLButtonElement>('[data-submenu-toggle]')) {
+      subToggle.addEventListener('click', () => {
+        const expanded = subToggle.getAttribute('aria-expanded') !== 'true';
+        subToggle.setAttribute('aria-expanded', String(expanded));
+        // Lets the whole group restyle itself while open (see MobileMenu.astro).
+        subToggle.parentElement?.toggleAttribute('data-expanded', expanded);
+      });
+    }
   }
 </script>
 
 <style>
-  /* Fixed over the page: transparent on top of the hero, translucent once scrolled. */
-  .header {
+  /* Full-width fixed strip that only the pill itself takes clicks in. */
+  .site-header {
     position: fixed;
-    inset: 0 0 auto;
+    inset: var(--header-top) var(--page-gutter) auto;
     z-index: 50;
+    display: flex;
+    justify-content: center;
+    pointer-events: none;
+    animation: fade-down 700ms var(--ease-out) backwards;
+  }
+
+  .site-header__pill {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-md);
-    height: var(--header-height);
-    padding-inline: var(--page-gutter);
-    animation: fade-down 600ms var(--ease-out) backwards;
-    transition:
-      height var(--duration) var(--ease-out),
-      background-color var(--duration) ease,
-      box-shadow var(--duration) ease;
+    width: min(100%, 72rem);
+    height: var(--header-pill-height);
+    padding-inline: clamp(1.25rem, 3vw, 2.25rem) clamp(0.5rem, 1.5vw, 1rem);
+    border-radius: var(--radius-pill);
+    background: rgb(255 252 248 / 0.82);
+    box-shadow:
+      var(--shadow-soft),
+      inset 0 0 0 1px rgb(255 255 255 / 0.8);
+    -webkit-backdrop-filter: blur(14px) saturate(1.2);
+    backdrop-filter: blur(14px) saturate(1.2);
+    pointer-events: auto;
   }
 
-  .header[data-scrolled] {
-    height: var(--header-height-compact);
-    background: rgb(255 255 255 / 0.85);
-    box-shadow: 0 1px 0 rgb(0 0 0 / 0.06);
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
-  }
-
-  /* Solid behind the open mobile menu, wherever the page is scrolled to. */
-  :global(html[data-menu-open]) .header {
-    background: var(--color-bg);
-  }
-
-  .brand {
-    display: inline-flex;
-    flex-direction: column;
-    padding: 0.3rem 0.5rem 0.35rem;
-    border: 2px solid var(--color-mint-strong);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    line-height: 1.1;
-    letter-spacing: 0.04em;
+  .site-header__logo {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-decoration: none;
-    text-transform: lowercase;
+  }
+
+  .site-nav__list {
+    display: flex;
+    align-items: center;
+    gap: clamp(0.25rem, 1.5vw, 1.25rem);
+  }
+
+  /* Shared with ProductsDropdown through :global, so all top-level items match. */
+  .site-header :global(.site-nav__link) {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-display);
+    font-size: 1.0625rem;
+    font-weight: 500;
+    text-decoration: none;
     transition: background-color var(--duration) ease;
   }
 
-  .brand:hover {
-    background: var(--color-mint);
+  .site-header :global(.site-nav__link:hover) {
+    background: var(--color-blush);
+  }
+
+  .site-header :global(.site-nav__link[aria-current]) {
+    background: rgb(246 199 205 / 0.55);
+  }
+
+  /* Hamburger: three equal lines that fold into an X. */
+  .site-header__toggle {
+    display: none;
+    place-items: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-blush);
+    cursor: pointer;
+    transition: background-color var(--duration) ease;
+  }
+
+  .site-header__toggle:hover,
+  .site-header__toggle[aria-expanded='true'] {
+    background: var(--color-pink);
+  }
+
+  .site-header__bars {
+    position: relative;
+    width: 1.25rem;
+    height: 0.875rem;
+  }
+
+  .site-header__bars span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition:
+      transform var(--duration) var(--ease-out),
+      opacity var(--duration-fast) ease;
+  }
+
+  .site-header__bars span:nth-child(1) {
+    top: 0;
+  }
+
+  .site-header__bars span:nth-child(2) {
+    top: calc(50% - 1px);
+  }
+
+  .site-header__bars span:nth-child(3) {
+    bottom: 0;
+  }
+
+  .site-header__toggle[aria-expanded='true'] .site-header__bars span:nth-child(1) {
+    transform: translateY(0.375rem) rotate(45deg);
+  }
+
+  .site-header__toggle[aria-expanded='true'] .site-header__bars span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .site-header__toggle[aria-expanded='true'] .site-header__bars span:nth-child(3) {
+    transform: translateY(-0.375rem) rotate(-45deg);
+  }
+
+  /* Mobile: hamburger instead of links — only when the menu script can run. */
+  @media (max-width: 47.99rem) {
+    :global(.js) .site-nav {
+      display: none;
+    }
+
+    :global(.js) .site-header__toggle {
+      display: grid;
+    }
+
+    .site-header__logo {
+      font-size: 1.125rem;
+    }
   }
 </style>

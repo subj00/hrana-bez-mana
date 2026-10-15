@@ -13,6 +13,14 @@ export async function getCategories(): Promise<Category[]> {
   return categories;
 }
 
+export async function getCategoryBySlug(slug: string): Promise<Category | undefined> {
+  return categories.find((category) => category.slug === slug);
+}
+
+export async function getProductsByCategory(categoryId: Category['id']): Promise<Product[]> {
+  return products.filter((product) => product.categoryId === categoryId);
+}
+
 export async function getProducts(): Promise<Product[]> {
   return products;
 }

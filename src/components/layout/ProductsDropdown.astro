@@ -1,0 +1,176 @@
+---
+import { categories } from '@/data/categories';
+import { categoryHref } from '@/data/navigation';
+import type { NavItem } from '@/types/site';
+
+interface Props {
+  item: NavItem;
+  current: boolean;
+}
+
+const { item, current } = Astro.props;
+const panelId = 'proizvodi-meni';
+const toneBySlug = new Map(categories.map((category) => [categoryHref(category.slug), category.tone]));
+---
+
+<!--
+  "Proizvodi" stays a real link to the overview page; the chevron next to it is the
+  disclosure button. The panel opens on hover, on keyboard focus and on click.
+-->
+<div class="dropdown" data-dropdown>
+  <a class="site-nav__link" href={item.href} aria-current={current ? 'page' : undefined}>
+    {item.label}
+  </a>
+  <button
+    class="dropdown__toggle"
+    type="button"
+    aria-expanded="false"
+    aria-controls={panelId}
+    aria-label="Kategorije proizvoda"
+    data-dropdown-toggle
+  >
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+      <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+  </button>
+
+  <div class="dropdown__panel" id={panelId}>
+    <ul class="dropdown__list" role="list">
+      {
+        item.children?.map((child) => (
+          <li>
+            <a class="dropdown__link" href={child.href}>
+              <span class={`dropdown__dot dropdown__dot--${toneBySlug.get(child.href) ?? 'blush'}`} aria-hidden="true" />
+              {child.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</div>
+
+<style>
+  .dropdown {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .dropdown__toggle {
+    display: grid;
+    place-items: center;
+    width: 1.875rem;
+    height: 1.875rem;
+    margin-inline-start: -0.5rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color var(--duration) ease;
+  }
+
+  .dropdown__toggle:hover {
+    background: var(--color-blush);
+  }
+
+  .dropdown__toggle svg {
+    transition: transform var(--duration) var(--ease-out);
+  }
+
+  .dropdown__panel {
+    position: absolute;
+    top: calc(100% + 0.875rem);
+    left: 50%;
+    z-index: 1;
+    min-width: 15rem;
+    padding: 0.5rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(170deg, var(--color-cream-white) 0%, var(--color-blush) 140%);
+    box-shadow:
+      var(--shadow-float),
+      inset 0 0 0 1px rgb(255 255 255 / 0.9);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, -0.5rem);
+    transition:
+      opacity var(--duration) ease,
+      transform var(--duration) var(--ease-out),
+      visibility 0s var(--duration);
+  }
+
+  /* Invisible bridge over the gap so the pointer can travel from the link to the panel. */
+  .dropdown__panel::before {
+    content: '';
+    position: absolute;
+    inset: -0.875rem 0 100%;
+  }
+
+  .dropdown:not([data-suppress]):hover .dropdown__panel,
+  .dropdown:not([data-suppress]):focus-within .dropdown__panel,
+  .dropdown__toggle[aria-expanded='true'] ~ .dropdown__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+    transition-delay: 0s;
+  }
+
+  .dropdown:not([data-suppress]):hover .dropdown__toggle svg,
+  .dropdown:not([data-suppress]):focus-within .dropdown__toggle svg,
+  .dropdown__toggle[aria-expanded='true'] svg {
+    transform: rotate(180deg);
+  }
+
+  .dropdown__link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-radius: 1rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background-color var(--duration) ease,
+      transform var(--duration) var(--ease-out);
+  }
+
+  .dropdown__link:hover,
+  .dropdown__link:focus-visible {
+    background: rgb(255 255 255 / 0.85);
+    transform: translateX(0.25rem);
+  }
+
+  .dropdown__dot {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+  }
+
+  .dropdown__dot--blush {
+    background: var(--tone-blush-solid);
+  }
+
+  .dropdown__dot--vanilla {
+    background: var(--tone-vanilla-solid);
+  }
+
+  .dropdown__dot--sage {
+    background: var(--tone-sage-solid);
+  }
+
+  .dropdown__dot--peach {
+    background: var(--tone-peach-solid);
+  }
+
+  /* Without JavaScript on small screens the links sit in the pill; no dropdown there. */
+  @media (max-width: 47.99rem) {
+    .dropdown__toggle,
+    .dropdown__panel {
+      display: none;
+    }
+  }
+</style>

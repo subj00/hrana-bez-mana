@@ -2,26 +2,50 @@
  * Design tokens. Components should reference these instead of hard-coded values.
  */
 :root {
-  /* Colors */
-  --color-bg: #ffffff;
-  --color-surface: #f5f5f5;
-  --color-text: #2f2f2f;
-  --color-text-muted: #4d4d4d;
-  --color-blush: #f9d6df;
-  --color-blush-soft: #fdecf0;
-  --color-mint: #b8ebe5;
-  --color-mint-strong: #9fe0d8;
-  --color-accent: var(--color-mint);
-  --color-border: #dddddd;
+  /* Palette */
+  --color-cream: #fff8f3;
+  --color-cream-white: #fffcf8;
+  --color-blush: #fbe5e1;
+  --color-pink: #f6c7cd;
+  --color-strawberry: #e88d94;
+  --color-chocolate: #45271c;
+  --color-beige: #f7e8d9;
+  --color-sage: #d8e6d8;
+  --color-vanilla: #fdf0dc;
+  --color-peach: #fbdfcc;
+
+  /* Roles */
+  --color-bg: var(--color-cream);
+  --color-surface: var(--color-cream-white);
+  --color-text: var(--color-chocolate);
+  --color-text-muted: #7a5a4e;
+  --color-border: rgb(69 39 28 / 0.1);
+
+  /* Category tones (see `tone` in data/categories.ts) */
+  --tone-blush: linear-gradient(160deg, #fdeeea 0%, var(--color-pink) 100%);
+  --tone-vanilla: linear-gradient(160deg, var(--color-cream-white) 0%, var(--color-beige) 100%);
+  --tone-sage: linear-gradient(160deg, #eef5ec 0%, var(--color-sage) 100%);
+  --tone-peach: linear-gradient(160deg, #fff1e6 0%, var(--color-peach) 100%);
+  /* Solid accents for small markers (dots) in the same tones */
+  --tone-blush-solid: var(--color-strawberry);
+  --tone-vanilla-solid: #e6c79c;
+  --tone-sage-solid: #9fbf9f;
+  --tone-peach-solid: #f0b48e;
+
+  /* Shadows: warm and soft, never grey */
+  --shadow-soft:
+    0 1px 2px rgb(69 39 28 / 0.04),
+    0 0.75rem 2rem -0.75rem rgb(232 141 148 / 0.4);
+  --shadow-float:
+    0 2px 4px rgb(69 39 28 / 0.05),
+    0 1.5rem 3rem -1rem rgb(232 141 148 / 0.5);
 
   /* Typography — the font variables are provided by the <Font> components in BaseLayout. */
   --font-body: var(--font-jost), system-ui, sans-serif;
-  --font-heading: var(--font-body);
-  --font-display: var(--font-outfit), system-ui, sans-serif;
-  --font-nav: var(--font-montserrat), system-ui, sans-serif;
+  --font-display: var(--font-nunito), var(--font-body);
   --font-size-base: 1rem;
   --line-height-base: 1.6;
-  --line-height-heading: 1.2;
+  --line-height-heading: 1.15;
 
   /* Motion */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
@@ -36,19 +60,24 @@
   --space-lg: 2rem;
   --space-xl: 4rem;
 
+  /* Radii */
+  --radius-sm: 0.75rem;
+  --radius: 1.25rem;
+  --radius-lg: 2rem;
+  --radius-pill: 100vmax;
+
   /* Layout */
-  --container-max: 72rem;
-  --container-padding: var(--space-md);
-  --page-gutter: clamp(1.25rem, 5vw, 4.5rem);
-  /* Header height at the top of the page, and once the page has been scrolled. */
-  --header-height: 6.5rem;
-  --header-height-compact: 4.75rem;
-  --radius: 0.5rem;
+  --container-max: 76rem;
+  --page-gutter: clamp(1rem, 4vw, 3rem);
+  --container-padding: var(--page-gutter);
+  /* Floating header: gap above the pill, the pill itself, and the space reserved below it. */
+  --header-top: clamp(0.75rem, 1.6vw, 1.25rem);
+  --header-pill-height: 4rem;
+  --header-offset: calc(var(--header-top) + var(--header-pill-height) + clamp(1rem, 2.5vw, 2rem));
 }
 
-@media (max-width: 48rem) {
+@media (max-width: 47.99rem) {
   :root {
-    --header-height: 4.5rem;
-    --header-height-compact: 4.25rem;
+    --header-pill-height: 3.5rem;
   }
 }

@@ -1,0 +1,16 @@
+---
+import CategoryList from '@/components/products/CategoryList.astro';
+import Container from '@/components/ui/Container.astro';
+import PageIntro from '@/components/ui/PageIntro.astro';
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import { getCategories } from '@/lib/catalog';
+
+const categories = await getCategories();
+---
+
+<BaseLayout title="Proizvodi">
+  <Container>
+    <PageIntro title="Proizvodi" lead="Izaberite kategoriju." />
+    <CategoryList categories={categories} layout="grid" />
+  </Container>
+</BaseLayout>

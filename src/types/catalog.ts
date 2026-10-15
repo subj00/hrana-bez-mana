@@ -1,7 +1,7 @@
 import type { ImageMetadata } from 'astro';
 
 /**
- * `src` is either a local image imported from `src/assets` (optimized by Astro)
+ * `src` is either a local image from `src/assets` (optimized by Astro)
  * or a URL string, e.g. coming from a CMS later on.
  */
 export interface CatalogImage {
@@ -9,13 +9,17 @@ export interface CatalogImage {
   alt: string;
 }
 
+/** Pastel background a category is presented with (see `--tone-*` in tokens.css). */
+export type CategoryTone = 'blush' | 'vanilla' | 'sage' | 'peach';
+
 export interface Category {
   id: string;
   name: string;
-  /** URL-safe identifier; also used as the in-page anchor (`#torte`). */
+  /** URL-safe identifier, used in the category's route (`/proizvodi/torte`). */
   slug: string;
   description: string;
   image?: CatalogImage;
+  tone: CategoryTone;
 }
 
 export interface Product {

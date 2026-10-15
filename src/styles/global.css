@@ -36,10 +36,13 @@ svg {
   height: auto;
 }
 
+button {
+  font: inherit;
+  color: inherit;
+}
+
 /* Base */
 html {
-  /* Keeps anchor targets clear of the fixed header. */
-  scroll-padding-top: var(--header-height-compact);
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
@@ -55,20 +58,32 @@ html[data-menu-open] {
   overflow: hidden;
 }
 
+/* Soft blush light falling across the top of every page. */
 body {
   min-height: 100vh;
+  overflow-x: clip;
   font-family: var(--font-body);
   font-size: var(--font-size-base);
   line-height: var(--line-height-base);
   color: var(--color-text);
-  background: var(--color-bg);
+  background:
+    radial-gradient(110% 55rem at 12% -10%, var(--color-blush) 0%, transparent 60%),
+    radial-gradient(80% 40rem at 100% 0%, #fdeee6 0%, transparent 60%),
+    var(--color-bg);
+  background-repeat: no-repeat;
+}
+
+/* Leaves room for the floating header; the home hero pulls itself back up under it. */
+main {
+  padding-top: var(--header-offset);
 }
 
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-heading);
+  font-family: var(--font-display);
+  font-weight: 600;
   line-height: var(--line-height-heading);
 }
 
@@ -77,18 +92,29 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-text);
+  outline: 2px solid var(--color-strawberry);
   outline-offset: 3px;
 }
 
 /* Accessibility helpers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .skip-link {
   position: absolute;
   top: var(--space-sm);
   left: var(--space-sm);
   z-index: 100;
   padding: var(--space-sm) var(--space-md);
-  background: var(--color-bg);
+  border-radius: var(--radius-pill);
+  background: var(--color-surface);
   transform: translateY(-200%);
 }
 
