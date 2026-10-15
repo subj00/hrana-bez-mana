@@ -1,5 +1,6 @@
 ---
 import { Font } from 'astro:assets';
+import CakeLoader from '@/components/layout/CakeLoader.astro';
 import Footer from '@/components/layout/Footer.astro';
 import Header from '@/components/layout/Header.astro';
 import { site } from '@/data/site';
@@ -26,8 +27,23 @@ const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- Lets CSS tell whether the navigation scripts can run (see Header.astro). -->
-    <script is:inline>document.documentElement.classList.add('js');</script>
+    <!--
+      Runs before first paint:
+      - the "js" class lets CSS tell whether the navigation scripts can run (Header.astro);
+      - data-loader="play" shows the cake intro (CakeLoader.astro) on the first page of a
+        visit only, and never for visitors who prefer reduced motion.
+    -->
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        root.classList.add('js');
+        try {
+          const seen = sessionStorage.getItem('hbm-loader-seen');
+          const calm = matchMedia('(prefers-reduced-motion: reduce)').matches;
+          if (!seen && !calm) root.dataset.loader = 'play';
+        } catch {}
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <Font cssVariable="--font-jost" preload />
     <Font cssVariable="--font-nunito" preload />
@@ -45,6 +61,7 @@ const imageUrl = image ? new URL(image, Astro.site ?? Astro.url) : undefined;
     {imageUrl && <meta property="og:image" content={imageUrl} />}
   </head>
   <body>
+    <CakeLoader />
     <a class="skip-link" href="#sadrzaj">Preskoči na sadržaj</a>
     <Header />
     <main id="sadrzaj">

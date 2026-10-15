@@ -1,0 +1,612 @@
+---
+import { getImage } from 'astro:assets';
+import { getAsset } from '@/lib/assets';
+
+/*
+ * First-visit intro: a small cake is assembled from four transparent layers, then the
+ * cake and its backdrop dissolve into the page.
+ *
+ * Plays once per browser session (see the inline script in BaseLayout's <head>), never
+ * for visitors who prefer reduced motion, and never without JavaScript. The four PNGs
+ * are cut from one composed cake on the same 600×600 canvas, so stacking them at the
+ * same position lines them up exactly; each layer only animates *into* that position.
+ */
+
+/** Choreography in milliseconds: when each step starts and how long it takes. */
+const timeline = {
+  stage: { at: 0, duration: 500 },
+  base: { at: 500, duration: 700 },
+  icing: { at: 1100, duration: 800 },
+  cream: { at: 1900, duration: 700 },
+  berry: { at: 2600, duration: 650 },
+  finish: { at: 3250, duration: 650 },
+  /** The earliest the page is revealed; it also waits for the page to finish loading. */
+  exit: { at: 4050, duration: 1000 },
+};
+
+const layerFiles = {
+  base: 'base_cake.png',
+  icing: 'pink_icing.png',
+  cream: 'whipped_cream.png',
+  berry: 'strawberry.png',
+} as const;
+
+const layers = await Promise.all(
+  (Object.entries(layerFiles) as [keyof typeof layerFiles, string][]).map(async ([name, file]) => {
+    const asset = getAsset(file);
+    return asset ? { name, image: await getImage({ src: asset, width: 600, format: 'webp' }) } : undefined;
+  }),
+);
+const ready = layers.every(Boolean);
+
+const timingVars = Object.entries(timeline)
+  .map(([step, { at, duration }]) => `--${step}-at: ${at}ms; --${step}-dur: ${duration}ms`)
+  .join('; ');
+
+const sparkles = [
+  { x: 14, y: 30, size: 1.1, delay: 0 },
+  { x: 86, y: 22, size: 0.8, delay: 90 },
+  { x: 90, y: 62, size: 1, delay: 180 },
+  { x: 8, y: 70, size: 0.75, delay: 260 },
+  { x: 62, y: 4, size: 0.7, delay: 140 },
+];
+---
+
+{
+  ready ? (
+    <div
+      class="cake-loader"
+      id="cake-loader"
+      role="status"
+      data-exit-at={timeline.exit.at}
+      data-exit-dur={timeline.exit.duration}
+      style={timingVars}
+    >
+      <span class="cake-loader__mist cake-loader__mist--1" aria-hidden="true" />
+      <span class="cake-loader__mist cake-loader__mist--2" aria-hidden="true" />
+
+      <div class="cake-loader__stage" aria-hidden="true">
+        <span class="cake-loader__glow" />
+        <span class="cake-loader__plate" />
+        <div class="cake-loader__cake">
+          {layers.map(
+            (layer) =>
+              layer && (
+                <img
+                  class={`cake-loader__layer cake-loader__layer--${layer.name}`}
+                  data-src={layer.image.src}
+                  width="600"
+                  height="600"
+                  alt=""
+                  decoding="async"
+                />
+              ),
+          )}
+        </div>
+        {sparkles.map(({ x, y, size, delay }) => (
+          <svg
+            class="cake-loader__sparkle"
+            viewBox="0 0 24 24"
+            style={`--x: ${x}%; --y: ${y}%; --s: ${size}; --d: ${delay}ms`}
+          >
+            <path d="M12 2c.8 5.2 2.8 7.2 8 8-5.2.8-7.2 2.8-8 8-.8-5.2-2.8-7.2-8-8 5.2-.8 7.2-2.8 8-8z" />
+          </svg>
+        ))}
+      </div>
+
+      <p class="cake-loader__text">
+        <span class="cake-loader__message cake-loader__message--1">Najlepše stvari nastaju s ljubavlju…</span>
+        <span class="cake-loader__message cake-loader__message--2">Sve je spremno, izvolite!</span>
+      </p>
+    </div>
+
+    <script is:inline>
+      (() => {
+        const root = document.documentElement;
+        const loader = document.getElementById('cake-loader');
+        if (!loader) return;
+        if (root.dataset.loader !== 'play') {
+          loader.remove();
+          return;
+        }
+
+        try {
+          sessionStorage.setItem('hbm-loader-seen', '1');
+        } catch {}
+
+        const exitAt = Number(loader.dataset.exitAt);
+        const exitDuration = Number(loader.dataset.exitDur);
+        const images = [...loader.querySelectorAll('img[data-src]')];
+        for (const img of images) img.src = img.dataset.src;
+
+        const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+        let started = false;
+        let leaving = false;
+
+        // Releases the page under the overlay (see the DOMContentLoaded handler below).
+        const releasePage = () => {
+          for (const element of document.querySelectorAll('[data-loader-inert]')) {
+            element.inert = false;
+            element.removeAttribute('data-loader-inert');
+          }
+        };
+
+        const finish = () => {
+          releasePage();
+          root.removeAttribute('data-loader');
+          loader.remove();
+        };
+
+        // Cake and backdrop dissolve while the page's own entrance animations start
+        // underneath ("reveal" un-pauses them), so the two read as one movement.
+        const leave = () => {
+          if (leaving) return;
+          leaving = true;
+          loader.dataset.state = started ? 'exit' : 'exit-early';
+          root.dataset.loader = 'reveal';
+          releasePage();
+          setTimeout(finish, exitDuration);
+        };
+
+        // Start only once all four layers are decoded, so nothing pops in half-loaded.
+        // If they take too long, skip the intro rather than keep the visitor waiting.
+        Promise.race([
+          Promise.all(images.map((img) => img.decode().catch(() => {}))).then(() => 'ready'),
+          wait(2500).then(() => 'slow'),
+        ]).then((result) => {
+          if (leaving) return;
+          if (result === 'slow') return leave();
+
+          started = true;
+          loader.dataset.state = 'run';
+
+          const pageLoaded =
+            document.readyState === 'complete'
+              ? Promise.resolve()
+              : new Promise((resolve) => addEventListener('load', resolve, { once: true }));
+
+          // Leave after the cake is finished and the page is loaded, but never wait
+          // more than a couple of seconds past the animation for a slow page.
+          Promise.race([Promise.all([pageLoaded, wait(exitAt)]), wait(exitAt + 2500)]).then(leave);
+        });
+
+        // A tap, click or key skips straight to the reveal.
+        loader.addEventListener('click', leave);
+        addEventListener('keydown', leave, { once: true });
+
+        // Nothing behind the overlay can be focused or clicked while it is up.
+        document.addEventListener('DOMContentLoaded', () => {
+          if (leaving) return;
+          for (const element of document.body.children) {
+            if (element === loader || element.tagName === 'SCRIPT' || element.inert) continue;
+            element.inert = true;
+            element.setAttribute('data-loader-inert', '');
+          }
+        });
+
+        // Failsafe: the overlay can never outstay its welcome.
+        setTimeout(() => {
+          if (loader.isConnected) leave();
+        }, 12000);
+      })();
+    </script>
+  ) : (
+    // A layer image is missing: never leave the page waiting for an intro that cannot play.
+    <script is:inline>document.documentElement.removeAttribute('data-loader');</script>
+  )
+}
+
+<style>
+  /* ---------- Overlay ---------- */
+
+  .cake-loader {
+    display: none;
+  }
+
+  :global(html[data-loader]) {
+    overflow: hidden;
+  }
+
+  /* Holds the page's own entrance animations at their first frame until the reveal. */
+  :global(html[data-loader='play'] body > :not(.cake-loader)),
+  :global(html[data-loader='play'] body > :not(.cake-loader) *) {
+    animation-play-state: paused !important;
+  }
+
+  /* Same light as the hero, so the dissolve into the page has no seam. */
+  :global(html[data-loader]) .cake-loader {
+    --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --settle: cubic-bezier(0.22, 1, 0.36, 1);
+
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid;
+    place-content: center;
+    justify-items: center;
+    gap: clamp(1.25rem, 4vmin, 2.25rem);
+    overflow: hidden;
+    background:
+      radial-gradient(50% 45% at 50% 44%, var(--color-cream-white) 0%, transparent 70%),
+      linear-gradient(180deg, var(--color-blush) 0%, var(--color-cream) 70%);
+    cursor: default;
+  }
+
+  .cake-loader__mist {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(50px);
+    opacity: 0.55;
+    animation: loader-mist 14s ease-in-out infinite alternate;
+  }
+
+  .cake-loader__mist--1 {
+    top: 8%;
+    left: -10%;
+    width: 50vmax;
+    height: 32vmax;
+    background: var(--color-pink);
+  }
+
+  .cake-loader__mist--2 {
+    right: -12%;
+    bottom: 4%;
+    width: 46vmax;
+    height: 30vmax;
+    background: var(--color-sage);
+    opacity: 0.4;
+    animation-direction: alternate-reverse;
+  }
+
+  /* ---------- Cake ---------- */
+
+  .cake-loader__stage {
+    position: relative;
+    width: clamp(11rem, 40vmin, 18rem);
+    aspect-ratio: 1;
+    animation: fade-in var(--stage-dur) ease-out var(--stage-at) both;
+  }
+
+  .cake-loader__cake {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* All four layers share the same frame; each animates *into* it, never away from it. */
+  .cake-loader__layer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    user-select: none;
+  }
+
+  .cake-loader__layer--base {
+    transform-origin: 50% 94%;
+  }
+
+  .cake-loader__layer--icing {
+    transform-origin: 50% 55%;
+  }
+
+  .cake-loader__layer--cream {
+    transform-origin: 52% 44%;
+  }
+
+  .cake-loader__layer--berry {
+    transform-origin: 58% 32%;
+  }
+
+  /* Soft contact shadow under the cake, arriving with the base. */
+  .cake-loader__plate {
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 3%;
+    height: 9%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(232 141 148 / 0.35), transparent);
+    opacity: 0;
+  }
+
+  .cake-loader__glow {
+    position: absolute;
+    inset: -12%;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgb(246 199 205 / 0.75), rgb(251 229 225 / 0.3) 55%, transparent 75%);
+    opacity: 0;
+  }
+
+  .cake-loader__sparkle {
+    position: absolute;
+    top: var(--y);
+    left: var(--x);
+    width: calc(var(--s) * 1.25rem);
+    height: auto;
+    fill: var(--color-strawberry);
+    opacity: 0;
+    translate: -50% -50%;
+  }
+
+  /* Assembly: runs once the layers are decoded (state "run"), and holds its end state
+     through the exit. */
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__layer--base {
+    animation: loader-base var(--base-dur) var(--settle) var(--base-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__plate {
+    animation: loader-plate var(--base-dur) var(--settle) var(--base-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__layer--icing {
+    animation: loader-icing var(--icing-dur) var(--settle) var(--icing-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__layer--cream {
+    animation: loader-cream var(--cream-dur) var(--settle) var(--cream-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__layer--berry {
+    animation: loader-berry var(--berry-dur) var(--settle) var(--berry-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__cake {
+    animation: loader-celebrate var(--finish-dur) ease-in-out var(--finish-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__glow {
+    animation: loader-glow var(--finish-dur) ease-out var(--finish-at) both;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__sparkle {
+    animation: loader-sparkle 900ms ease-out calc(var(--finish-at) + var(--d)) both;
+  }
+
+  /* ---------- Message ---------- */
+
+  .cake-loader__text {
+    display: grid;
+    position: relative;
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1rem, 2.4vmin, 1.25rem);
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: var(--color-chocolate);
+    text-align: center;
+  }
+
+  .cake-loader__message {
+    grid-area: 1 / 1;
+    opacity: 0;
+  }
+
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__message--2 {
+    animation: loader-message-in 600ms var(--settle) var(--finish-at) both;
+  }
+
+  /* The first message steps aside just as the second arrives. */
+  .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__message--1 {
+    animation:
+      loader-message-in 600ms var(--settle) calc(var(--stage-at) + 300ms) both,
+      loader-message-leave 400ms ease-in calc(var(--finish-at) - 200ms) forwards;
+  }
+
+  /* ---------- Exit ---------- */
+
+  .cake-loader[data-state^='exit'] {
+    animation: loader-dissolve var(--exit-dur) ease-in-out both;
+    pointer-events: none;
+  }
+
+  .cake-loader[data-state='exit'] .cake-loader__stage {
+    animation: loader-cake-out var(--exit-dur) cubic-bezier(0.5, 0, 0.3, 1) both;
+  }
+
+  .cake-loader[data-state^='exit'] .cake-loader__text {
+    animation: loader-text-out 350ms ease-in both;
+  }
+
+  /* ---------- Keyframes ---------- */
+
+  @keyframes loader-mist {
+    to {
+      transform: translate3d(4vmax, -2vmax, 0);
+    }
+  }
+
+  /* Rises from below with a whisper of overshoot. */
+  @keyframes loader-base {
+    0% {
+      opacity: 0;
+      transform: translateY(26%) scale(0.96);
+    }
+
+    55% {
+      opacity: 1;
+      transform: translateY(-2.5%) scale(1.01);
+    }
+
+    78% {
+      transform: translateY(0.8%) scale(0.998);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes loader-plate {
+    from {
+      opacity: 0;
+      transform: scaleX(0.6);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Drops on, squashes a touch on contact, and settles. */
+  @keyframes loader-icing {
+    0% {
+      opacity: 0;
+      transform: translateY(-34%);
+    }
+
+    45% {
+      opacity: 1;
+      transform: translateY(1.5%) scale(1.015, 0.97);
+    }
+
+    68% {
+      transform: translateY(-1%) scale(0.995, 1.01);
+    }
+
+    86% {
+      transform: translateY(0.3%);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Piped on: grows from its base with a soft twist. */
+  @keyframes loader-cream {
+    0% {
+      opacity: 0;
+      transform: scale(0.25) rotate(-28deg);
+    }
+
+    60% {
+      opacity: 1;
+      transform: scale(1.06) rotate(4deg);
+    }
+
+    82% {
+      transform: scale(0.985) rotate(-1deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Drops onto the cream, tips, and rocks to rest. */
+  @keyframes loader-berry {
+    0% {
+      opacity: 0;
+      transform: translateY(-48%) rotate(-14deg);
+    }
+
+    50% {
+      opacity: 1;
+      transform: translateY(2%) rotate(4deg);
+    }
+
+    70% {
+      transform: translateY(-1.5%) rotate(-2deg);
+    }
+
+    86% {
+      transform: translateY(0.4%) rotate(0.6deg);
+    }
+
+    100% {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* One small, happy lift once the cake is complete. */
+  @keyframes loader-celebrate {
+    0%,
+    100% {
+      transform: none;
+    }
+
+    45% {
+      transform: translateY(-3%) scale(1.035);
+    }
+  }
+
+  @keyframes loader-glow {
+    from {
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes loader-sparkle {
+    0% {
+      opacity: 0;
+      transform: scale(0) rotate(-30deg);
+    }
+
+    45% {
+      opacity: 1;
+      transform: scale(1) rotate(0);
+    }
+
+    100% {
+      opacity: 0.55;
+      transform: scale(0.7) rotate(15deg);
+    }
+  }
+
+  @keyframes loader-message-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes loader-message-leave {
+    to {
+      opacity: 0;
+      transform: translateY(-0.4rem);
+    }
+  }
+
+  @keyframes loader-text-out {
+    to {
+      opacity: 0;
+    }
+  }
+
+  /* The finished cake lifts towards the viewer as it fades. */
+  @keyframes loader-cake-out {
+    to {
+      opacity: 0;
+      transform: translateY(-4%) scale(1.22);
+    }
+  }
+
+  /* The backdrop holds briefly, then melts away into the page's own background. */
+  @keyframes loader-dissolve {
+    0%,
+    20% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+</style>
