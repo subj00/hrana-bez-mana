@@ -56,7 +56,7 @@ export interface Offer {
   galleryLabel: string;
   galleryAlt: string;
   /** Background of the whole section; default is the page's own. */
-  background?: 'cream' | 'sage';
+  background?: 'blush' | 'vanilla' | 'sage' | 'peach';
 }
 
 export const offers: Record<string, Offer> = {
@@ -84,6 +84,7 @@ export const offers: Record<string, Offer> = {
     ],
     galleryLabel: 'Primeri naših torti',
     galleryAlt: 'Primer torte',
+    background: 'blush',
   },
 
   'sitni-kolaci': {
@@ -117,7 +118,7 @@ export const offers: Record<string, Offer> = {
     ],
     galleryLabel: 'Primeri naših sitnih kolača',
     galleryAlt: 'Primer sitnih kolača',
-    background: 'cream',
+    background: 'vanilla',
   },
 
   kanapei: {
@@ -191,6 +192,6 @@ export const offers: Record<string, Offer> = {
     ],
     galleryLabel: 'Primeri naših predjela',
     galleryAlt: 'Primer predjela',
-    background: 'cream',
+    background: 'peach',
   },
 };

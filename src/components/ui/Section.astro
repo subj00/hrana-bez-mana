@@ -11,11 +11,8 @@ interface Props {
   titleImage?: ImageMetadata;
   /** A faint blush band behind the section, to set alternate sections apart. */
   tinted?: boolean;
-  /**
-   * Background of the whole section: `cream` is the colour of the price cards, `sage`
-   * the soft green of the Kanapei tone.
-   */
-  background?: 'cream' | 'sage';
+  /** Background of the whole section: a light wash of one of the category tones. */
+  background?: 'blush' | 'vanilla' | 'sage' | 'peach';
   /** The small line-and-bead ornament above the title. */
   ornament?: boolean;
   /**
@@ -150,12 +147,20 @@ const titleVars = titleImage
     }
   }
 
-  .section--cream {
-    background: var(--color-cream-white);
+  .section--blush {
+    background: var(--bg-blush);
+  }
+
+  .section--vanilla {
+    background: var(--bg-vanilla);
   }
 
   .section--sage {
-    background: var(--tone-sage);
+    background: var(--bg-sage);
+  }
+
+  .section--peach {
+    background: var(--bg-peach);
   }
 
   .section--tinted {

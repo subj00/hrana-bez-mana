@@ -1,6 +1,6 @@
 ---
 import { Image } from 'astro:assets';
-import HeroClouds from '@/components/home/HeroClouds.astro';
+import Clouds, { type Cloud } from '@/components/ui/Clouds.astro';
 import CategoryList from '@/components/products/CategoryList.astro';
 import { SECTION_IDS } from '@/data/navigation';
 import { site } from '@/data/site';
@@ -12,6 +12,22 @@ const cake = getAsset('hero-cake.png');
 const backdrop = getAsset('hero-background.png');
 const categories = await getCategories();
 
+/*
+ * Spread around the edges and corners so the title (left) and cake (right) keep clear
+ * air around them; several clouds run off the edges of the screen.
+ */
+const heroClouds: Cloud[] = [
+  { x: -3, y: 13, width: 24, opacity: 0.6, blur: 3, drift: { x: 40, y: 8, seconds: 16 }, mobile: { x: -8, y: 5, width: 46 } },
+  { x: 31, y: 5, width: 8, opacity: 0.5, blur: 2, flip: true, drift: { x: -22, y: 6, seconds: 9 }, mobile: false },
+  { x: 49, y: 13, width: 11, opacity: 0.75, blur: 1, drift: { x: 28, y: -8, seconds: 11 }, mobile: false },
+  { x: 99, y: 17, width: 27, opacity: 0.9, flip: true, drift: { x: -44, y: 10, seconds: 18 }, mobile: { x: 104, y: 13, width: 50 } },
+  { x: 5, y: 63, width: 21, opacity: 0.92, drift: { x: 34, y: -9, seconds: 14 }, mobile: { x: -12, y: 33, width: 44 } },
+  { x: 46, y: 76, width: 13, opacity: 0.45, blur: 4, flip: true, drift: { x: -26, y: 7, seconds: 12 }, mobile: false },
+  { x: 95, y: 64, width: 17, opacity: 0.75, blur: 1, drift: { x: -32, y: -8, seconds: 13 }, mobile: { x: 108, y: 42, width: 40 } },
+  { x: 76, y: 97, width: 26, opacity: 0.55, blur: 3, flip: true, drift: { x: 42, y: -6, seconds: 17 }, mobile: { x: 104, y: 74, width: 44 } },
+  { x: 20, y: 99, width: 19, opacity: 0.5, blur: 3, drift: { x: -30, y: 6, seconds: 15 }, mobile: { x: -6, y: 92, width: 40 } },
+];
+
 ---
 
 <section class="hero" id={SECTION_IDS.home} aria-labelledby="hero-naslov">
@@ -22,7 +38,7 @@ const categories = await getCategories();
     <span class="hero__mist hero__mist--2"></span>
     <span class="hero__mist hero__mist--3"></span>
   </div>
-  <HeroClouds />
+  <Clouds clouds={heroClouds} />
 
   <div class="hero__stage">
     <div class="hero__title">

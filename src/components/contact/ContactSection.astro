@@ -1,9 +1,167 @@
 ---
-import ContactCard from '@/components/contact/ContactCard.astro';
-import Section from '@/components/ui/Section.astro';
+import ContactLink from '@/components/contact/ContactLink.astro';
+import Clouds, { type Cloud } from '@/components/ui/Clouds.astro';
+import Container from '@/components/ui/Container.astro';
 import { SECTION_IDS } from '@/data/navigation';
+import { site } from '@/data/site';
+
+const headingId = `${SECTION_IDS.contact}-naslov`;
+
+// Only the profile name is shown, taken from the Instagram address.
+const instagramHandle = `@${new URL(site.instagramUrl).pathname.replaceAll('/', '')}`;
+
+/*
+ * Clouds around the edges, clear of the centred text and cards. Depth comes from size,
+ * blur and speed together: far clouds are small, soft and slow; near ones larger,
+ * sharper and drift further.
+ */
+const clouds: Cloud[] = [
+  { x: 6, y: 14, width: 24, opacity: 0.85, drift: { x: 44, y: 10, seconds: 14 }, mobile: { x: -8, y: 5, width: 46 } },
+  { x: 22, y: 4, width: 9, opacity: 0.45, blur: 3, flip: true, drift: { x: -18, y: 5, seconds: 22 }, mobile: false },
+  { x: 95, y: 10, width: 20, opacity: 0.7, blur: 1, flip: true, drift: { x: -36, y: 8, seconds: 16 }, mobile: { x: 106, y: 12, width: 44 } },
+  { x: 80, y: 36, width: 10, opacity: 0.4, blur: 4, drift: { x: 20, y: -5, seconds: 24 }, mobile: false },
+  { x: -2, y: 58, width: 18, opacity: 0.55, blur: 2, drift: { x: 30, y: -7, seconds: 19 }, mobile: { x: -12, y: 52, width: 38 } },
+  { x: 100, y: 70, width: 26, opacity: 0.8, flip: true, drift: { x: -46, y: 9, seconds: 15 }, mobile: { x: 108, y: 74, width: 46 } },
+  { x: 16, y: 94, width: 21, opacity: 0.6, blur: 2, flip: true, drift: { x: 34, y: -6, seconds: 18 }, mobile: { x: -4, y: 96, width: 42 } },
+  { x: 68, y: 98, width: 13, opacity: 0.4, blur: 4, drift: { x: -22, y: 5, seconds: 23 }, mobile: false },
+];
+
+const phones = site.contact.phones;
 ---
 
-<Section id={SECTION_IDS.contact} title="Kontakt">
-  <ContactCard />
-</Section>
+<!--
+  Kontakt: a centred, airy composition — large heading, a short line of text, one
+  prominent Instagram card and the two phone cards beneath it — over soft glows and
+  slowly drifting clouds.
+-->
+<section class="contact" id={SECTION_IDS.contact} aria-labelledby={headingId}>
+  <div class="contact__glow contact__glow--1" aria-hidden="true"></div>
+  <div class="contact__glow contact__glow--2" aria-hidden="true"></div>
+  <Clouds clouds={clouds} />
+
+  <Container>
+    <div class="contact__inner">
+      <h2 class="contact__title" id={headingId} data-reveal="up">Kontakt</h2>
+      <p class="contact__intro" data-reveal="up" style="--reveal-delay: 120ms">
+        Tu smo za sve vaše porudžbine, pitanja i ideje! Pišite nam, rado ćemo vam pomoći.
+      </p>
+
+      <ul class="contact__links" role="list">
+        <li class="contact__link contact__link--wide" data-reveal="up" style="--reveal-delay: 240ms">
+          <ContactLink
+            href={site.instagramUrl}
+            label="Pratite nas na Instagramu"
+            value={instagramHandle}
+            icon="instagram"
+            external
+            featured
+          />
+        </li>
+        {
+          phones.map((phone, index) => (
+            <li class="contact__link" data-reveal="up" style={`--reveal-delay: ${360 + index * 120}ms`}>
+              <ContactLink href={`tel:${phone.tel}`} label="Pozovite nas" value={phone.display} icon="phone" />
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .contact {
+    position: relative;
+    /* The bottom is a little shorter: the footer follows straight after the cards. */
+    padding-block: clamp(3.5rem, 9vw, 6.5rem) clamp(3rem, 6vw, 4.5rem);
+    background: var(--bg-page-end);
+    overflow: clip;
+    isolation: isolate;
+    /* Lands the section just below the floating header when scrolled to. */
+    scroll-margin-top: calc(var(--header-top) + var(--header-pill-height) - 1rem);
+  }
+
+  /* Soft blush and cream glows that drift almost imperceptibly behind the content. */
+  .contact__glow {
+    position: absolute;
+    z-index: -2;
+    border-radius: 50%;
+    filter: blur(60px);
+    pointer-events: none;
+    animation: contact-glow 26s ease-in-out infinite alternate;
+  }
+
+  .contact__glow--1 {
+    top: 8%;
+    left: 50%;
+    width: min(46rem, 90vw);
+    height: 60%;
+    background: radial-gradient(closest-side, rgb(246 199 205 / 0.55), transparent);
+    translate: -50% 0;
+  }
+
+  .contact__glow--2 {
+    bottom: 0;
+    left: 50%;
+    width: min(36rem, 80vw);
+    height: 45%;
+    background: radial-gradient(closest-side, rgb(255 252 248 / 0.95), transparent);
+    translate: -30% 0;
+    animation-duration: 32s;
+    animation-direction: alternate-reverse;
+  }
+
+  @keyframes contact-glow {
+    to {
+      transform: translate3d(3%, -4%, 0) scale(1.06);
+    }
+  }
+
+  /* ---------- Content ---------- */
+
+  .contact__inner {
+    display: grid;
+    justify-items: center;
+    width: min(100%, 44rem);
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .contact__title {
+    font-size: clamp(3rem, 9vw, 5rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-strawberry);
+    text-shadow: 0 0.5rem 1.5rem rgb(232 141 148 / 0.25);
+  }
+
+  .contact__intro {
+    max-width: 30rem;
+    margin-top: clamp(1rem, 2.5vw, 1.5rem);
+    font-size: clamp(1.0625rem, 1.8vw, 1.25rem);
+    line-height: 1.6;
+    color: var(--color-text-muted);
+  }
+
+  /* Instagram across the full width, the two phones side by side beneath it. */
+  .contact__links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(0.875rem, 2vw, 1.25rem);
+    width: 100%;
+    margin-top: clamp(2rem, 5vw, 3rem);
+    text-align: start;
+  }
+
+  .contact__link--wide {
+    grid-column: 1 / -1;
+  }
+
+  /* Phones: one column, all three stacked. */
+  @media (max-width: 40rem) {
+    .contact__links {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

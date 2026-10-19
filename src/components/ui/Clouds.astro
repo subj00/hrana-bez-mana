@@ -3,11 +3,11 @@ import { Image } from 'astro:assets';
 import { getAsset } from '@/lib/assets';
 
 /**
- * One cloud in the scene. Position is the cloud's centre in % of the hero, width is in %
- * of the hero's width; `mobile` overrides them on small screens, or `false` leaves the
- * cloud out there. Opacity, blur and size together set how far away a cloud feels.
+ * One cloud in the scene. Position is the cloud's centre in % of the parent section,
+ * width is in % of its width; `mobile` overrides them on small screens, or `false` leaves
+ * the cloud out there. Opacity, blur and size together set how far away a cloud feels.
  */
-interface Cloud {
+export interface Cloud {
   x: number;
   y: number;
   width: number;
@@ -22,22 +22,12 @@ interface Cloud {
   mobile?: { x: number; y: number; width: number } | false;
 }
 
-/*
- * Spread around the edges and corners so the title (left) and cake (right) keep clear
- * air around them; several clouds run off the edges of the screen.
- */
-const clouds: Cloud[] = [
-  { x: -3, y: 13, width: 24, opacity: 0.6, blur: 3, drift: { x: 40, y: 8, seconds: 16 }, mobile: { x: -8, y: 5, width: 46 } },
-  { x: 31, y: 5, width: 8, opacity: 0.5, blur: 2, flip: true, drift: { x: -22, y: 6, seconds: 9 }, mobile: false },
-  { x: 49, y: 13, width: 11, opacity: 0.75, blur: 1, drift: { x: 28, y: -8, seconds: 11 }, mobile: false },
-  { x: 99, y: 17, width: 27, opacity: 0.9, flip: true, drift: { x: -44, y: 10, seconds: 18 }, mobile: { x: 104, y: 13, width: 50 } },
-  { x: 5, y: 63, width: 21, opacity: 0.92, drift: { x: 34, y: -9, seconds: 14 }, mobile: { x: -12, y: 33, width: 44 } },
-  { x: 46, y: 76, width: 13, opacity: 0.45, blur: 4, flip: true, drift: { x: -26, y: 7, seconds: 12 }, mobile: false },
-  { x: 95, y: 64, width: 17, opacity: 0.75, blur: 1, drift: { x: -32, y: -8, seconds: 13 }, mobile: { x: 108, y: 42, width: 40 } },
-  { x: 76, y: 97, width: 26, opacity: 0.55, blur: 3, flip: true, drift: { x: 42, y: -6, seconds: 17 }, mobile: { x: 104, y: 74, width: 44 } },
-  { x: 20, y: 99, width: 19, opacity: 0.5, blur: 3, drift: { x: -30, y: 6, seconds: 15 }, mobile: { x: -6, y: 92, width: 40 } },
-];
 
+interface Props {
+  clouds: Cloud[];
+}
+
+const { clouds } = Astro.props;
 const cloud = getAsset('decoration-cloud.png');
 ---
 
@@ -72,7 +62,10 @@ const cloud = getAsset('decoration-cloud.png');
 }
 
 <style>
-  /* Fills the hero behind everything; clouds are positioned and sized against it. */
+  /*
+   * Fills the parent section behind everything (the parent needs position: relative and
+   * isolation: isolate); clouds are positioned and sized against it.
+   */
   .clouds {
     position: absolute;
     inset: 0;
@@ -110,11 +103,16 @@ const cloud = getAsset('decoration-cloud.png');
     }
 
     to {
-      transform: translate3d(var(--dx), var(--dy), 0);
+      transform: translate3d(calc(var(--dx) * var(--drift-scale, 1)), calc(var(--dy) * var(--drift-scale, 1)), 0);
     }
   }
 
   @media (max-width: 47.99rem) {
+    /* Phones: shorter drift paths. */
+    .clouds {
+      --drift-scale: 0.6;
+    }
+
     .cloud {
       top: var(--my, var(--y));
       left: var(--mx, var(--x));

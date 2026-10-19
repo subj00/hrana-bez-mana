@@ -26,6 +26,16 @@
   --tone-vanilla: linear-gradient(160deg, var(--color-cream-white) 0%, var(--color-beige) 100%);
   --tone-sage: linear-gradient(160deg, #eef5ec 0%, var(--color-sage) 100%);
   --tone-peach: linear-gradient(160deg, #fff1e6 0%, var(--color-peach) 100%);
+  /*
+   * Section backgrounds: very light washes of the category tones, so each section echoes
+   * its card on the home page while text, photos and cards stay clearly readable.
+   */
+  --bg-blush: #fdf0ed;
+  --bg-vanilla: #fdf5ea;
+  --bg-sage: var(--tone-sage);
+  --bg-peach: #fff1e7;
+  /* The last section before the footer; the footer's rounded corners show this colour. */
+  --bg-page-end: var(--bg-blush);
   /* Solid accents for small markers (dots) in the same tones */
   --tone-blush-solid: var(--color-strawberry);
   --tone-vanilla-solid: #e6c79c;

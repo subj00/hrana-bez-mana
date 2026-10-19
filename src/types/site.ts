@@ -5,16 +5,15 @@ export interface NavItem {
   children?: NavItem[];
 }
 
-export interface SocialLink {
-  label: string;
-  href: string;
+export interface PhoneNumber {
+  /** As shown, e.g. "+381 62 147 9457". */
+  display: string;
+  /** For the tel: link, digits only with the country code, e.g. "+381621479457". */
+  tel: string;
 }
 
 export interface ContactInfo {
-  phone?: string;
-  email?: string;
-  address?: string;
-  social: SocialLink[];
+  phones: PhoneNumber[];
 }
 
 export interface SiteConfig {
