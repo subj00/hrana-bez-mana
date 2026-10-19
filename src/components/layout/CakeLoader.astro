@@ -12,16 +12,20 @@ import { getAsset } from '@/lib/assets';
  * same position lines them up exactly; each layer only animates *into* that position.
  */
 
-/** Choreography in milliseconds: when each step starts and how long it takes. */
+/**
+ * Choreography in milliseconds: when each step starts and how long it takes. Each layer
+ * starts while the previous one is still settling, so the whole intro, exit included,
+ * takes under two seconds.
+ */
 const timeline = {
-  stage: { at: 0, duration: 500 },
-  base: { at: 500, duration: 700 },
-  icing: { at: 1100, duration: 800 },
-  cream: { at: 1900, duration: 700 },
-  berry: { at: 2600, duration: 650 },
-  finish: { at: 3250, duration: 650 },
-  /** The earliest the page is revealed; it also waits for the page to finish loading. */
-  exit: { at: 4050, duration: 1000 },
+  stage: { at: 0, duration: 250 },
+  base: { at: 100, duration: 420 },
+  icing: { at: 360, duration: 440 },
+  cream: { at: 620, duration: 400 },
+  berry: { at: 850, duration: 400 },
+  finish: { at: 1150, duration: 380 },
+  /** The page is revealed right here; nothing waits for anything else. */
+  exit: { at: 1450, duration: 450 },
 };
 
 const layerFiles = {
@@ -152,7 +156,7 @@ const sparkles = [
         // If they take too long, skip the intro rather than keep the visitor waiting.
         Promise.race([
           Promise.all(images.map((img) => img.decode().catch(() => {}))).then(() => 'ready'),
-          wait(2500).then(() => 'slow'),
+          wait(700).then(() => 'slow'),
         ]).then((result) => {
           if (leaving) return;
           if (result === 'slow') return leave();
@@ -160,14 +164,8 @@ const sparkles = [
           started = true;
           loader.dataset.state = 'run';
 
-          const pageLoaded =
-            document.readyState === 'complete'
-              ? Promise.resolve()
-              : new Promise((resolve) => addEventListener('load', resolve, { once: true }));
-
-          // Leave after the cake is finished and the page is loaded, but never wait
-          // more than a couple of seconds past the animation for a slow page.
-          Promise.race([Promise.all([pageLoaded, wait(exitAt)]), wait(exitAt + 2500)]).then(leave);
+          // Leave as soon as the cake is finished; the page loads on underneath.
+          wait(exitAt).then(leave);
         });
 
         // A tap, click or key skips straight to the reveal.
@@ -187,7 +185,7 @@ const sparkles = [
         // Failsafe: the overlay can never outstay its welcome.
         setTimeout(() => {
           if (loader.isConnected) leave();
-        }, 12000);
+        }, 4000);
       })();
     </script>
   ) : (
@@ -360,7 +358,7 @@ const sparkles = [
   }
 
   .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__sparkle {
-    animation: loader-sparkle 900ms ease-out calc(var(--finish-at) + var(--d)) both;
+    animation: loader-sparkle 500ms ease-out calc(var(--finish-at) + var(--d) / 2) both;
   }
 
   /* ---------- Message ---------- */
@@ -383,14 +381,14 @@ const sparkles = [
   }
 
   .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__message--2 {
-    animation: loader-message-in 600ms var(--settle) var(--finish-at) both;
+    animation: loader-message-in 350ms var(--settle) var(--finish-at) both;
   }
 
   /* The first message steps aside just as the second arrives. */
   .cake-loader:is([data-state='run'], [data-state='exit']) .cake-loader__message--1 {
     animation:
-      loader-message-in 600ms var(--settle) calc(var(--stage-at) + 300ms) both,
-      loader-message-leave 400ms ease-in calc(var(--finish-at) - 200ms) forwards;
+      loader-message-in 350ms var(--settle) calc(var(--stage-at) + 100ms) both,
+      loader-message-leave 250ms ease-in calc(var(--finish-at) - 150ms) forwards;
   }
 
   /* ---------- Exit ---------- */
@@ -405,7 +403,7 @@ const sparkles = [
   }
 
   .cake-loader[data-state^='exit'] .cake-loader__text {
-    animation: loader-text-out 350ms ease-in both;
+    animation: loader-text-out 200ms ease-in both;
   }
 
   /* ---------- Keyframes ---------- */
@@ -598,10 +596,10 @@ const sparkles = [
     }
   }
 
-  /* The backdrop holds briefly, then melts away into the page's own background. */
+  /* The backdrop holds for a beat, then melts away into the page's own background. */
   @keyframes loader-dissolve {
     0%,
-    20% {
+    10% {
       opacity: 1;
     }
 
