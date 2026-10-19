@@ -11,10 +11,41 @@ interface Props {
   titleImage?: ImageMetadata;
   /** A faint blush band behind the section, to set alternate sections apart. */
   tinted?: boolean;
+  /**
+   * Background of the whole section: `cream` is the colour of the price cards, `sage`
+   * the soft green of the Kanapei tone.
+   */
+  background?: 'cream' | 'sage';
+  /** The small line-and-bead ornament above the title. */
+  ornament?: boolean;
+  /**
+   * Desktop only: spacing measured from the visible lettering (using `titleTrim`) —
+   * a modest gap above the title and a fixed, comfortable gap between it and the content.
+   */
+  snug?: boolean;
+  /** Empty share of the title image above/below its lettering (see Category.titleTrim). */
+  titleTrim?: { top: number; bottom: number };
 }
 
-const { id, title, titleImage, tinted = false } = Astro.props;
+const {
+  id,
+  title,
+  titleImage,
+  tinted = false,
+  background,
+  ornament = true,
+  snug = false,
+  titleTrim,
+} = Astro.props;
 const headingId = `${id}-naslov`;
+const titleVars = titleImage
+  ? [
+      `--title-ratio: ${titleImage.width / titleImage.height}`,
+      titleTrim && `--trim-top: ${titleTrim.top}; --trim-bottom: ${titleTrim.bottom}`,
+    ]
+      .filter(Boolean)
+      .join('; ')
+  : undefined;
 ---
 
 <!--
@@ -22,13 +53,17 @@ const headingId = `${id}-naslov`;
   Shared by every section below the hero so they read as one continuous page.
 -->
 <section
-  class:list={['section', { 'section--tinted': tinted }]}
+  class:list={[
+    'section',
+    background && `section--${background}`,
+    { 'section--tinted': tinted, 'section--plain': !ornament, 'section--snug': snug },
+  ]}
   id={id}
   aria-labelledby={headingId}
   data-reveal="section"
 >
   <Container>
-    <h2 class="section__title" id={headingId}>
+    <h2 class="section__title" id={headingId} style={titleVars}>
       {
         titleImage ? (
           <Image
@@ -86,6 +121,41 @@ const headingId = `${id}-naslov`;
   :global([data-reveal-ready]) .section:not([data-revealed])::before {
     opacity: 0;
     transform: scaleX(0.3);
+  }
+
+  .section--plain::before {
+    content: none;
+  }
+
+  /*
+   * Snug (desktop): the title images carry transparent bands above and below their
+   * lettering, of different sizes per image. Those bands are trimmed with negative
+   * margins (image height × measured share), so the gaps below are true gaps to the
+   * letters and come out identical for every snug section.
+   */
+  @media (min-width: 64rem) {
+    .section--snug {
+      padding-block: 2.5rem 3rem;
+    }
+
+    .section--snug .section__title {
+      margin-bottom: 2.5rem;
+    }
+
+    .section--snug :global(.section__title-image) {
+      --title-height: calc(28rem / var(--title-ratio, 3));
+
+      margin-block: calc(var(--trim-top, 0) * -1 * var(--title-height))
+        calc(var(--trim-bottom, 0) * -1 * var(--title-height));
+    }
+  }
+
+  .section--cream {
+    background: var(--color-cream-white);
+  }
+
+  .section--sage {
+    background: var(--tone-sage);
   }
 
   .section--tinted {

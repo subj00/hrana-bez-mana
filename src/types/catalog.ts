@@ -21,6 +21,11 @@ export interface Category {
   image?: CatalogImage;
   /** Decorative lettering used as the section title. */
   titleImage?: CatalogImage;
+  /**
+   * Share of the title image's height that is empty above and below the lettering, so
+   * spacing can be measured from the letters rather than the image box.
+   */
+  titleTrim?: { top: number; bottom: number };
   tone: CategoryTone;
 }
 

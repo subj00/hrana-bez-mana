@@ -1,9 +1,10 @@
 ---
-import TorteSection from '@/components/cakes/TorteSection.astro';
 import ContactSection from '@/components/contact/ContactSection.astro';
 import HeroSection from '@/components/home/HeroSection.astro';
 import CategorySection from '@/components/products/CategorySection.astro';
+import OfferSection from '@/components/products/OfferSection.astro';
 import { SECTION_IDS } from '@/data/navigation';
+import { offers } from '@/data/offers';
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import { getCategories, getProductsByCategory } from '@/lib/catalog';
 
@@ -19,13 +20,18 @@ const sections = await Promise.all(
 
   <div class="products" id={SECTION_IDS.products}>
     {
-      sections.map(({ category, products }, index) =>
-        category.slug === 'torte' ? (
-          <TorteSection category={category} />
+      /*
+       * Categories with prices and photos use OfferSection; on desktop every other one is
+       * mirrored (photos left) for a zigzag.
+       */
+      sections.map(({ category, products }, index) => {
+        const offer = offers[category.slug];
+        return offer ? (
+          <OfferSection category={category} offer={offer} reversed={index % 2 === 1} />
         ) : (
           <CategorySection category={category} products={products} mirrored={index % 2 === 0} tinted={index % 2 === 1} />
-        ),
-      )
+        );
+      })
     }
   </div>
 
