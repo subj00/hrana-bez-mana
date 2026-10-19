@@ -176,7 +176,7 @@ export const offers: Record<string, Offer> = {
     ],
     highlights: [
       // Images still to come; until then the tiles show an empty placeholder.
-      { image: 'predjela-rolati.png', text: 'Tri vrste slanih rolata' },
+      { image: 'appetizers-variation.png', text: 'Tri vrste slanih rolata' },
       { image: 'canapes-party.png', text: 'Za svaku proslavu' },
     ],
     gallery: [
