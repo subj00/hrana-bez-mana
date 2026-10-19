@@ -1,14 +1,32 @@
 ---
+import { Image } from 'astro:assets';
 import MobileMenu from '@/components/layout/MobileMenu.astro';
 import ProductsDropdown from '@/components/layout/ProductsDropdown.astro';
 import { navItems, SECTION_IDS, sectionHref } from '@/data/navigation';
 import { site } from '@/data/site';
+import { getAsset } from '@/lib/assets';
+
+const logo = getAsset('logo.png');
 ---
 
 <header class="site-header">
   <div class="site-header__pill">
-    <!-- Placeholder until the real logo exists. -->
-    <a class="site-header__logo" href={sectionHref(SECTION_IDS.home)} aria-label={`${site.name} — početna`}>LOGO</a>
+    <a class="site-header__logo" href={sectionHref(SECTION_IDS.home)} aria-label={`${site.name} — početna`}>
+      {
+        logo ? (
+          <Image
+            class="site-header__logo-image"
+            src={logo}
+            alt=""
+            widths={[56, 112, 168]}
+            sizes="3.5rem"
+            loading="eager"
+          />
+        ) : (
+          'LOGO'
+        )
+      }
+    </a>
 
     <nav class="site-nav" aria-label="Glavna navigacija">
       <ul class="site-nav__list" role="list">
@@ -210,11 +228,26 @@ import { site } from '@/data/site';
   }
 
   .site-header__logo {
+    display: flex;
+    align-items: center;
     font-family: var(--font-display);
     font-size: 1.25rem;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-decoration: none;
+  }
+
+  /* The round badge, nearly as tall as the pill, with a small lift on hover. */
+  .site-header :global(.site-header__logo-image) {
+    width: calc(var(--header-pill-height) - 0.5rem);
+    height: auto;
+    transition: transform 400ms var(--ease-out);
+  }
+
+  @media (hover: hover) {
+    .site-header__logo:hover :global(.site-header__logo-image) {
+      transform: rotate(-6deg) scale(1.05);
+    }
   }
 
   .site-nav__list {
